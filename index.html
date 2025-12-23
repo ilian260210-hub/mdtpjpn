@@ -6,7 +6,7 @@
     <title>Intranet PJ - Administration</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -19,13 +19,15 @@
                 <span id="modal-type" class="badge-modal">TYPE</span>
                 <button onclick="fermerModal()" class="btn-close"><i class="fas fa-times"></i></button>
             </div>
-            <h2 id="modal-title">Titre du rapport</h2>
-            <div class="modal-meta">
-                <div class="meta-item"><i class="fas fa-user-circle"></i> <span id="modal-author">Agent</span></div>
-                <div class="meta-item"><i class="far fa-clock"></i> <span id="modal-date">Date</span></div>
-            </div>
-            <div class="modal-content-area">
-                <p id="modal-content">...</p>
+            <div class="modal-scroll-area">
+                <h2 id="modal-title">Titre du rapport</h2>
+                <div class="modal-meta">
+                    <div class="meta-item"><i class="fas fa-user-circle"></i> <span id="modal-author">Agent</span></div>
+                    <div class="meta-item"><i class="far fa-clock"></i> <span id="modal-date">Date</span></div>
+                </div>
+                <div class="modal-content-text">
+                    <p id="modal-content">...</p>
+                </div>
             </div>
             <div class="modal-footer" id="modal-footer-actions"></div>
         </div>
@@ -77,7 +79,7 @@
             <header class="top-bar">
                 <div class="breadcrumbs">
                     <h2>Intranet PJ</h2>
-                    <span>Version 4.0 • Sécurisé</span>
+                    <span>Version 4.1 • Sécurisé</span>
                 </div>
                 <div class="system-status">
                     <span class="dot-blink"></span> Connecté au réseau
@@ -86,30 +88,16 @@
 
             <div id="page-accueil" class="page active">
                 <div class="stats-container">
-                    <div class="stat-card">
-                        <div class="icon-box blue"><i class="fas fa-file-alt"></i></div>
-                        <div class="stat-text"><h3>Rapports</h3><span id="stat-total">0</span></div>
-                    </div>
-                    <div class="stat-card red">
-                        <div class="icon-box red"><i class="fas fa-handcuffs"></i></div>
-                        <div class="stat-text"><h3>Arrestations</h3><span id="stat-arrest">0</span></div>
-                    </div>
-                    <div class="stat-card orange">
-                        <div class="icon-box orange"><i class="fas fa-shield-alt"></i></div>
-                        <div class="stat-text"><h3>PVI</h3><span id="stat-pvi">0</span></div>
-                    </div>
-                    <div class="stat-card purple">
-                        <div class="icon-box purple"><i class="fas fa-gavel"></i></div>
-                        <div class="stat-text"><h3>Plaintes</h3><span id="stat-plainte">0</span></div>
-                    </div>
+                    <div class="stat-card"><div class="icon-box blue"><i class="fas fa-file-alt"></i></div><div class="stat-text"><h3>Rapports</h3><span id="stat-total">0</span></div></div>
+                    <div class="stat-card red"><div class="icon-box red"><i class="fas fa-handcuffs"></i></div><div class="stat-text"><h3>Arrestations</h3><span id="stat-arrest">0</span></div></div>
+                    <div class="stat-card orange"><div class="icon-box orange"><i class="fas fa-shield-alt"></i></div><div class="stat-text"><h3>PVI</h3><span id="stat-pvi">0</span></div></div>
+                    <div class="stat-card purple"><div class="icon-box purple"><i class="fas fa-gavel"></i></div><div class="stat-text"><h3>Plaintes</h3><span id="stat-plainte">0</span></div></div>
                 </div>
 
                 <div class="content-panel">
-                    <div class="panel-header">
-                        <h3><i class="fas fa-history"></i> Activité Récente</h3>
-                    </div>
+                    <div class="panel-header"><h3><i class="fas fa-history"></i> Activité Récente</h3></div>
                     <div id="live-reports-list" class="list-container">
-                        <div class="loader">Chargement des données...</div>
+                        <div class="loader">Chargement...</div>
                     </div>
                 </div>
             </div>
@@ -118,12 +106,19 @@
                 <div class="service-wrapper">
                     <div class="service-card-central">
                         <h2>Gestion de Service</h2>
-                        <p>Cliquez sur le bouton pour changer votre état.</p>
+                        <p>Signalez votre activité au central.</p>
                         
-                        <button id="btn-service-toggle" class="btn-service-morph off" onclick="toggleServiceAction()">
-                            <div class="icon-container"><i id="service-btn-icon" class="fas fa-power-off"></i></div>
-                            <span id="service-btn-text">PRENDRE MON SERVICE</span>
-                        </button>
+                        <div class="service-buttons-row">
+                            <button class="btn-service start" onclick="toggleServiceButton('prise')">
+                                <i class="fas fa-play"></i>
+                                <span>PRISE DE SERVICE</span>
+                            </button>
+                            
+                            <button class="btn-service end" onclick="toggleServiceButton('fin')">
+                                <i class="fas fa-stop"></i>
+                                <span>FIN DE SERVICE</span>
+                            </button>
+                        </div>
 
                         <div class="status-indicator-box">
                             Statut actuel : <span id="txt-status-big">HORS SERVICE</span>
@@ -134,40 +129,37 @@
 
             <div id="page-rapports" class="page">
                 <div class="content-panel">
-                    <div class="panel-header"><h3><i class="fas fa-pen-nib"></i> Rédaction de Procédure</h3></div>
+                    <div class="panel-header"><h3><i class="fas fa-pen-nib"></i> Rédaction</h3></div>
                     <div class="form-layout">
                         <div class="form-group">
-                            <label>Titre de la procédure</label>
-                            <input type="text" id="pv-titre" placeholder="Ex: Vol à main armée - Superette">
+                            <label>Titre</label>
+                            <input type="text" id="pv-titre" placeholder="Ex: Vol à main armée">
                         </div>
                         <div class="form-group">
-                            <label>Type de dossier</label>
+                            <label>Type</label>
                             <select id="pv-type">
-                                <option value="INFO">Information / Main courante</option>
+                                <option value="INFO">Information</option>
                                 <option value="ARRESTATION">Arrestation</option>
-                                <option value="AMENDE">Amende / Contravention</option>
-                                <option value="PVI">PVI (Intervention)</option>
-                                <option value="PLAINTE">Dépôt de Plainte</option>
+                                <option value="AMENDE">Amende</option>
+                                <option value="PVI">PVI</option>
+                                <option value="PLAINTE">Plainte</option>
                             </select>
                         </div>
                         <div class="form-group full-width">
                             <label>Rapport détaillé</label>
-                            <textarea id="pv-content" rows="10" placeholder="Décrivez les faits avec précision..."></textarea>
+                            <textarea id="pv-content" rows="10" placeholder="Faits..."></textarea>
                         </div>
-                        <button class="btn-primary" onclick="envoyerRapport()">Enregistrer et Transmettre</button>
+                        <button class="btn-primary" onclick="envoyerRapport()">Enregistrer</button>
                     </div>
                 </div>
             </div>
 
             <div id="page-messagerie" class="page">
                 <div class="chat-layout">
-                    <div class="chat-header">
-                        <h3><i class="fas fa-comments"></i> Canal Sécurisé PJ</h3>
-                    </div>
-                    <div id="chat-box" class="chat-messages">
-                        </div>
+                    <div class="chat-header"><h3><i class="fas fa-comments"></i> Canal Sécurisé</h3></div>
+                    <div id="chat-box" class="chat-messages"></div>
                     <div class="chat-input">
-                        <input type="text" id="mail-input" placeholder="Message à l'unité...">
+                        <input type="text" id="mail-input" placeholder="Message...">
                         <button onclick="envoyerMail()" class="btn-send"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
@@ -178,35 +170,25 @@
                     <div class="card-action">
                         <div class="card-icon"><i class="fas fa-user-secret"></i></div>
                         <h3>Concours OPJ</h3>
-                        <p>Officier de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-ghost">Ouvrir le dossier</a>
+                        <a href="https://google.com" target="_blank" class="btn-ghost">Dossier</a>
                     </div>
                     <div class="card-action">
                         <div class="card-icon"><i class="fas fa-user-shield"></i></div>
                         <h3>Concours APJ</h3>
-                        <p>Agent de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-ghost">Ouvrir le dossier</a>
+                        <a href="https://google.com" target="_blank" class="btn-ghost">Dossier</a>
                     </div>
                 </div>
             </div>
 
             <div id="page-personnel" class="page">
                 <div class="content-panel">
-                    <div class="panel-header"><h3><i class="fas fa-users"></i> Tableau des Effectifs</h3></div>
+                    <div class="panel-header"><h3><i class="fas fa-users"></i> Effectifs</h3></div>
                     <table class="clean-table">
-                        <thead>
-                            <tr>
-                                <th width="60"></th>
-                                <th>Identité</th>
-                                <th>Dernière présence</th>
-                                <th>État</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th width="60"></th><th>Identité</th><th>Dernière présence</th><th>État</th></tr></thead>
                         <tbody id="effectif-list"></tbody>
                     </table>
                 </div>
             </div>
-
         </main>
     </div>
     <script src="script.js"></script>
