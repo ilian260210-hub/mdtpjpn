@@ -38,37 +38,26 @@ let currentUser = null;
 let enService = false;
 let isAdmin = false;
 
-// --- DÉMARRAGE SÉCURISÉ ---
 window.onload = () => {
-    // 1. On nettoie l'URL (si on revient de Discord)
+    // Changement de nom de session pour forcer un "Reset" propre
+    const localUser = localStorage.getItem("mdt_final_session");
+    
+    // Si on revient de Discord avec un code
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = fragment.get("access_token");
 
-    // 2. Si on a un token Discord, on priorise la nouvelle connexion
     if (accessToken) {
         verifierUtilisateurDiscord(accessToken);
-        return;
-    }
-
-    // 3. Sinon, on regarde la mémoire
-    const localUser = localStorage.getItem("mdt_v5_session");
-    
-    if (localUser) {
+    } else if (localUser) {
         try {
             currentUser = JSON.parse(localUser);
-            // VÉRIFICATION : Si le profil est vide ou buggé, on force la déconnexion
-            if (!currentUser || !currentUser.name || !currentUser.id) {
-                throw new Error("Session invalide");
-            }
+            if (!currentUser.id) throw new Error("Session invalide");
             if(currentUser.isAdmin) isAdmin = true;
             lancerInterface();
-        } catch (e) {
-            // Si erreur de lecture, on nettoie tout et on renvoie au login
-            console.warn("Session corrompue, déconnexion forcée.");
-            logout(); 
+        } catch(e) {
+            logout(); // Si erreur, on déconnecte
         }
     }
-    // Si rien trouvé, on reste sur le login (comportement par défaut du HTML)
 };
 
 function loginWithDiscord() {
@@ -94,7 +83,7 @@ async function verifierUtilisateurDiscord(token) {
                 avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
                 isAdmin: isAdmin
             };
-            localStorage.setItem("mdt_v5_session", JSON.stringify(currentUser));
+            localStorage.setItem("mdt_final_session", JSON.stringify(currentUser));
             
             db.collection("users").doc(currentUser.id).set({
                 name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date()
@@ -102,7 +91,8 @@ async function verifierUtilisateurDiscord(token) {
 
             lancerInterface();
         } else {
-            alert("Accès refusé."); window.location.href = "/";
+            alert("Accès refusé. Rôle manquant."); 
+            window.location.href = "/";
         }
     } catch (e) { console.error(e); }
 }
@@ -120,7 +110,7 @@ function lancerInterface() {
     verifierMonStatut();
 }
 
-// --- BOUTONS SERVICE ---
+// --- SERVICE (2 BOUTONS) ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
@@ -147,33 +137,11 @@ function updateUIStatus(isOn) {
     const header = document.getElementById("header-status");
     if(isOn) {
         txt.innerText = "EN SERVICE"; txt.style.color = "#10b981";
-        header.className = "status-dot-text online"; header.innerText = "En Service";
+        header.className = "status-pill online"; header.innerText = "En Service";
     } else {
         txt.innerText = "HORS SERVICE"; txt.style.color = "#ef4444";
-        header.className = "status-dot-text offline"; header.innerText = "Hors Service";
+        header.className = "status-pill offline"; header.innerText = "Hors Service";
     }
-}
-
-// --- MESSAGERIE ---
-function ecouterMails() {
-    db.collection("mails").orderBy("date", "asc").limitToLast(50)
-    .onSnapshot((snapshot) => {
-        const box = document.getElementById("chat-box");
-        box.innerHTML = "";
-        snapshot.forEach(doc => {
-            const msg = doc.data();
-            const isMe = msg.authorId === currentUser.id;
-            const bubble = isMe ? "msg-mine" : "msg-other";
-            box.innerHTML += `<div class="msg-bubble ${bubble}"><span class="msg-meta">${msg.authorName}</span>${msg.content}</div>`;
-        });
-        box.scrollTop = box.scrollHeight;
-    });
-}
-function envoyerMail() {
-    const input = document.getElementById("mail-input");
-    if(!input.value) return;
-    db.collection("mails").add({ content: input.value, authorName: currentUser.name, authorId: currentUser.id, date: new Date() });
-    input.value = "";
 }
 
 // --- RAPPORTS ---
@@ -185,7 +153,7 @@ function ecouterRapports() {
             if(da.type==="ARRESTATION") st.a++; if(da.type==="PVI") st.p++; if(da.type==="PLAINTE") st.pl++;
             
             let tagC = "info"; 
-            if(da.type==="ARRESTATION") tagC="arrest"; if(da.type==="PVI") tagC="pvi"; if(da.type==="PLAINTE") tagC="plainte";
+            if(da.type==="ARRESTATION") tagC="arrest";
             
             const safeTitle = da.titre.replace(/'/g, "\\'");
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
@@ -199,19 +167,6 @@ function ecouterRapports() {
     });
 }
 
-function ecouterEffectifs() {
-    db.collection("users").onSnapshot((s) => {
-        let h = "";
-        s.forEach(d => {
-            const a = d.data();
-            const col = a.enService ? "#10b981" : "#ef4444"; const txt = a.enService ? "En Service" : "Hors Service";
-            h += `<tr><td><img src="${a.avatar}"></td><td><b>${a.name}</b></td><td>${a.lastLogin?new Date(a.lastLogin.toDate()).toLocaleDateString():'-'}</td><td><span class="dot" style="background:${col}"></span> ${txt}</td></tr>`;
-        });
-        document.getElementById("effectif-list").innerHTML = h;
-    });
-}
-
-// --- MODAL ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
@@ -224,7 +179,7 @@ async function ouvrirModal(id) {
     document.getElementById("modal-content").innerText = data.content;
     
     const ft = document.getElementById("modal-footer-actions"); ft.innerHTML="";
-    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" style="background:#ef4444;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:700;">Supprimer</button>`;
+    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" class="btn-delete">Supprimer</button>`;
     
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
@@ -246,11 +201,40 @@ function envoyerWebhook(url, title, color, desc) {
     fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({embeds:[{title:title, description:desc, color:color, thumbnail:{url:currentUser.avatar}}]}) });
 }
 
+// --- MESSAGERIE ---
+function ecouterMails() {
+    db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
+        const box = document.getElementById("chat-box"); box.innerHTML = "";
+        s.forEach(d => {
+            const m = d.data(); const isMe = m.authorId === currentUser.id;
+            box.innerHTML += `<div class="msg-bubble ${isMe?'msg-mine':'msg-other'}"><span class="msg-meta">${m.authorName}</span>${m.content}</div>`;
+        });
+        box.scrollTop = box.scrollHeight;
+    });
+}
+function envoyerMail() {
+    const i = document.getElementById("mail-input"); if(!i.value) return;
+    db.collection("mails").add({ content:i.value, authorName:currentUser.name, authorId:currentUser.id, date:new Date() });
+    i.value="";
+}
+
+// --- EFFECTIFS ---
+function ecouterEffectifs() {
+    db.collection("users").onSnapshot((s) => {
+        let h = "";
+        s.forEach(d => {
+            const a = d.data();
+            const col = a.enService ? "#10b981" : "#ef4444"; const txt = a.enService ? "En Service" : "Hors Service";
+            h += `<tr><td><img src="${a.avatar}"></td><td><b>${a.name}</b></td><td>${a.lastLogin?new Date(a.lastLogin.toDate()).toLocaleDateString():'-'}</td><td><span style="color:${col};font-weight:700">● ${txt}</span></td></tr>`;
+        });
+        document.getElementById("effectif-list").innerHTML = h;
+    });
+}
+
 function changerPage(id) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.nav-menu li').forEach(l=>l.classList.remove('active'));
+    document.querySelectorAll('.nav-links li').forEach(l=>l.classList.remove('active'));
     document.getElementById('page-'+id).classList.add('active');
     document.getElementById('nav-'+id).classList.add('active');
 }
-function logout() { localStorage.removeItem("mdt_v5_session"); window.location.href=REDIRECT_URI; }
-
+function logout() { localStorage.removeItem("mdt_final_session"); window.location.href=REDIRECT_URI; }
