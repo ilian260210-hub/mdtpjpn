@@ -38,17 +38,37 @@ let currentUser = null;
 let enService = false;
 let isAdmin = false;
 
+// --- DÉMARRAGE SÉCURISÉ ---
 window.onload = () => {
-    const localUser = localStorage.getItem("mdt_v5_session");
-    if (localUser) {
-        currentUser = JSON.parse(localUser);
-        if(currentUser.isAdmin) isAdmin = true;
-        lancerInterface();
-    } else {
-        const fragment = new URLSearchParams(window.location.hash.slice(1));
-        const accessToken = fragment.get("access_token");
-        if (accessToken) verifierUtilisateurDiscord(accessToken);
+    // 1. On nettoie l'URL (si on revient de Discord)
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = fragment.get("access_token");
+
+    // 2. Si on a un token Discord, on priorise la nouvelle connexion
+    if (accessToken) {
+        verifierUtilisateurDiscord(accessToken);
+        return;
     }
+
+    // 3. Sinon, on regarde la mémoire
+    const localUser = localStorage.getItem("mdt_v5_session");
+    
+    if (localUser) {
+        try {
+            currentUser = JSON.parse(localUser);
+            // VÉRIFICATION : Si le profil est vide ou buggé, on force la déconnexion
+            if (!currentUser || !currentUser.name || !currentUser.id) {
+                throw new Error("Session invalide");
+            }
+            if(currentUser.isAdmin) isAdmin = true;
+            lancerInterface();
+        } catch (e) {
+            // Si erreur de lecture, on nettoie tout et on renvoie au login
+            console.warn("Session corrompue, déconnexion forcée.");
+            logout(); 
+        }
+    }
+    // Si rien trouvé, on reste sur le login (comportement par défaut du HTML)
 };
 
 function loginWithDiscord() {
@@ -233,3 +253,4 @@ function changerPage(id) {
     document.getElementById('nav-'+id).classList.add('active');
 }
 function logout() { localStorage.removeItem("mdt_v5_session"); window.location.href=REDIRECT_URI; }
+
