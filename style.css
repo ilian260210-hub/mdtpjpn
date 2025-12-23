@@ -1,25 +1,266 @@
-/* Garde ton CSS précédent et ajoute/remplace ces parties pour les tableaux */
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+:root {
+    --bg-app: #f3f4f6;
+    --bg-sidebar: #ffffff;
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    
+    /* Couleurs Status */
+    --green-bg: #ecfdf5; --green-text: #047857; --green-border: #a7f3d0;
+    --red-bg: #fef2f2; --red-text: #991b1b; --red-border: #fecaca;
+    
+    /* Animations */
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background: var(--bg-app); 
+    color: var(--text-main); 
+    overflow: hidden; /* Empêche le scroll global, on scroll dans le contenu */
+    height: 100vh; 
+}
+
+/* =========================================
+   2. LOGIN SCREEN
+   ========================================= */
+#login-screen { 
+    display: flex; height: 100vh; justify-content: center; align-items: center; 
+    background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+    position: fixed; width: 100%; top: 0; left: 0; z-index: 9999;
+}
+
+.login-card { 
+    background: white; padding: 40px; border-radius: 16px; text-align: center; width: 380px; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
+    animation: popIn 0.6s var(--ease-bounce);
+}
+
+.logos i { animation: float 3s ease-in-out infinite; }
+
+.btn-discord { 
+    background: #5865F2; color: white; border: none; padding: 14px; width: 100%; 
+    border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 25px; font-size: 16px;
+    transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(88, 101, 242, 0.3);
+}
+.btn-discord:hover { background: #4752c4; transform: translateY(-2px); }
+
+/* =========================================
+   3. DASHBOARD LAYOUT
+   ========================================= */
+.hidden { display: none !important; }
+
+#dashboard-screen { 
+    display: flex; /* IMPORTANT: Met Sidebar et Contenu côte à côte */
+    height: 100vh; 
+    width: 100vw; 
+}
+
+/* --- SIDEBAR (GAUCHE) --- */
+.sidebar { 
+    width: 280px; min-width: 280px; 
+    background: var(--bg-sidebar); border-right: 1px solid var(--border); 
+    display: flex; flex-direction: column; padding: 25px; 
+    z-index: 10;
+}
+
+.user-box { 
+    display: flex; align-items: center; gap: 15px; margin-bottom: 30px; 
+    padding-bottom: 25px; border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.8s ease;
+}
+.user-box img { 
+    width: 55px; height: 55px; border-radius: 12px; border: 2px solid var(--border); 
+    object-fit: cover;
+}
+.user-text h3 { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+/* Badges sidebar */
+.status-badge { 
+    font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 700; 
+    display: inline-block; margin-top: 4px; transition: all 0.4s ease;
+}
+.online { background: var(--green-bg); color: var(--green-text); }
+.offline { background: var(--red-bg); color: var(--red-text); }
+
+/* Menu */
+.menu-list { list-style: none; }
+.menu-list li { 
+    padding: 14px 16px; margin-bottom: 8px; cursor: pointer; border-radius: 10px; 
+    color: var(--text-muted); font-weight: 500; display: flex; gap: 12px; align-items: center; 
+    transition: all 0.2s var(--ease-smooth); 
+}
+.menu-list li:hover { background: #f8fafc; color: var(--primary); transform: translateX(5px); }
+.menu-list li.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
+.logout-btn { margin-top: auto; color: #ef4444 !important; }
+.logout-btn:hover { background: #fef2f2 !important; }
+
+/* --- CONTENU PRINCIPAL (DROITE) --- */
+.content { 
+    flex: 1; /* Prend tout l'espace restant */
+    padding: 40px; 
+    overflow-y: auto; /* Scroll uniquement ici */
+    display: flex; flex-direction: column; 
+    background: #f9fafb;
+}
+
+header { 
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; 
+    animation: slideDown 0.6s ease;
+}
+header h2 { font-size: 24px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
+
+.system-ok { 
+    font-size: 13px; font-weight: 600; color: #047857; 
+    background: #d1fae5; padding: 6px 12px; border-radius: 20px; 
+}
+
+/* =========================================
+   4. PAGES & COMPOSANTS
+   ========================================= */
+.page { display: none; }
+.page.active { 
+    display: block; 
+    animation: slideUpFade 0.5s var(--ease-smooth) forwards; 
+}
+
+/* --- STATS GRID --- */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-bottom: 20px; }
+.stat-box { 
+    background: white; padding: 25px; border-radius: 12px; border: 1px solid var(--border); 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: transform 0.3s ease;
+}
+.stat-box:hover { transform: translateY(-5px); }
+.stat-box h3 { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+.stat-box span { font-size: 32px; font-weight: 800; color: var(--text-main); }
+
+.blue { border-top: 4px solid #3b82f6; } 
+.red { border-top: 4px solid #ef4444; }
+.orange { border-top: 4px solid #f97316; } 
+.green { border-top: 4px solid #22c55e; }
+
+/* --- PAGE SERVICE (ON/OFF) --- */
+.service-container { text-align: center; max-width: 450px; margin: 60px auto; }
+.service-card { 
+    padding: 50px; border-radius: 20px; border: 2px solid transparent; margin-bottom: 30px; 
+    transition: all 0.5s var(--ease-smooth); 
+}
+.is-online { background: #ecfdf5; border-color: #34d399; color: #065f46; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
+.is-offline { background: #fff1f2; border-color: #fda4af; color: #9f1239; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.service-card i { font-size: 50px; margin-bottom: 15px; display: block; transition: transform 0.5s; }
+.is-online i { transform: scale(1.1); }
+
+.btn-toggle { 
+    width: 100%; padding: 18px; border-radius: 50px; border: none; 
+    font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s ease;
+}
+.btn-toggle:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+/* --- FORMULAIRES & BOITES --- */
+.form-panel, .concours-item { 
+    background: white; padding: 30px; border-radius: 12px; border: 1px solid var(--border); 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-top: 20px;
+}
+.form-panel h3 { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+
+input, select, textarea { 
+    width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; 
+    margin-bottom: 20px; margin-top: 6px; font-family: inherit; background: #f9fafb;
+    transition: 0.2s;
+}
+input:focus, select:focus, textarea:focus { 
+    outline: none; border-color: var(--primary); background: white; 
+}
+.btn-submit { 
+    background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; 
+    cursor: pointer; font-weight: 600; transition: 0.2s;
+}
+.btn-submit:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+/* --- PAGE CONCOURS --- */
+.concours-grid { display: flex; gap: 25px; }
+.concours-item { 
+    flex: 1; text-align: center; transition: transform 0.3s ease; border-top: 4px solid transparent;
+}
+.concours-item:hover { transform: translateY(-5px); border-top-color: var(--primary); }
+.concours-item i { font-size: 40px; margin-bottom: 20px; color: var(--primary); display: block; }
+.btn-link { 
+    display: inline-block; padding: 10px 20px; border: 2px solid var(--primary); 
+    color: var(--primary); text-decoration: none; border-radius: 8px; margin-top: 15px; font-weight: 600;
+    transition: 0.2s;
+}
+.btn-link:hover { background: var(--primary); color: white; }
+
+/* =========================================
+   5. NOUVEAU : TABLES & LISTES (FIREBASE)
+   ========================================= */
+
+/* Tableau Effectifs */
 .effectif-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-.effectif-table th { text-align: left; padding: 12px; background: #f9fafb; border-bottom: 2px solid #e5e7eb; color: #4b5563; font-size: 13px; font-weight: 600; }
-.effectif-table td { padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
-.effectif-table img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-.agent-name { font-weight: 600; color: #1f2937; }
+.effectif-table th { 
+    text-align: left; padding: 12px; background: #f9fafb; 
+    border-bottom: 2px solid var(--border); color: var(--text-muted); 
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+}
+.effectif-table td { 
+    padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; 
+}
+.effectif-table img { 
+    width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);
+}
+.agent-name { font-weight: 600; color: var(--text-main); }
 
-/* Status dans le tableau */
+/* Badges de service dans le tableau */
 .tag-service { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-.tag-on { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.tag-off { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.tag-on { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
+.tag-off { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
 
-/* Liste rapports accueil */
+/* Liste rapports récents (Accueil) */
 .reports-container { max-height: 300px; overflow-y: auto; }
 .report-mini-item { 
     display: flex; justify-content: space-between; align-items: center; 
-    padding: 12px; border-bottom: 1px solid #f3f4f6; 
+    padding: 12px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s;
 }
+.report-mini-item:hover { background: #f9fafb; }
 .report-mini-item:last-child { border-bottom: none; }
-.report-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-right: 10px; }
+
+.report-tag { 
+    font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 4px; 
+    text-transform: uppercase; margin-right: 10px; 
+}
 .rt-arrest { background: #fee2e2; color: #b91c1c; }
 .rt-info { background: #eff6ff; color: #1e40af; }
 .rt-amende { background: #ecfdf5; color: #047857; }
 .rt-inter { background: #ffedd5; color: #c2410c; }
+
+/* =========================================
+   6. ANIMATIONS
+   ========================================= */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+@keyframes slideUpFade {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+}
