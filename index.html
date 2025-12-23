@@ -71,7 +71,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 5.3 • Final</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 6.0 • Stable</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
@@ -90,27 +90,24 @@
 
             <div id="page-service" class="page">
                 <div class="service-center-wrapper">
-                    <div class="service-box">
-                        <div class="service-header-text">
-                            <h2>Gestion de Service</h2>
-                            <p>Sélectionnez une action pour mettre à jour votre statut.</p>
-                            <div class="current-status-pill">
-                                ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span>
-                            </div>
+                    <div class="service-header-text">
+                        <h2>Gestion de Service</h2>
+                        <p>Sélectionnez une action pour mettre à jour votre statut.</p>
+                        <div class="current-status-pill">
+                            ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span>
                         </div>
-                        
-                        <div class="service-actions-cards">
-                            <div class="action-card start-card" onclick="toggleServiceButton('prise')">
-                                <div class="icon-circle"><i class="fas fa-play"></i></div>
-                                <h3>Prise de Service</h3>
-                                <p>Commencer ma patrouille</p>
-                            </div>
-                            
-                            <div class="action-card end-card" onclick="toggleServiceButton('fin')">
-                                <div class="icon-circle"><i class="fas fa-stop"></i></div>
-                                <h3>Fin de Service</h3>
-                                <p>Terminer et rentrer</p>
-                            </div>
+                    </div>
+                    
+                    <div class="service-actions-cards">
+                        <div class="action-card start-card" onclick="toggleServiceButton('prise')">
+                            <div class="icon-circle"><i class="fas fa-play"></i></div>
+                            <h3>Prise de Service</h3>
+                            <p>Commencer ma patrouille</p>
+                        </div>
+                        <div class="action-card end-card" onclick="toggleServiceButton('fin')">
+                            <div class="icon-circle"><i class="fas fa-stop"></i></div>
+                            <h3>Fin de Service</h3>
+                            <p>Terminer et rentrer</p>
                         </div>
                     </div>
                 </div>
@@ -158,27 +155,38 @@
             </div>
 
             <div id="page-concours" class="page">
-                <div class="cards-grid center-grid">
+                <div class="concours-wrapper">
                     <div class="card-item">
-                        <i class="fas fa-user-secret icon-bg"></i>
+                        <div class="icon-bg"><i class="fas fa-user-secret"></i></div>
                         <h3>Concours OPJ</h3>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Ouvrir</a>
+                        <p>Officier de Police Judiciaire</p>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
                     </div>
                     <div class="card-item">
-                        <i class="fas fa-user-shield icon-bg"></i>
+                        <div class="icon-bg"><i class="fas fa-user-shield"></i></div>
                         <h3>Concours APJ</h3>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Ouvrir</a>
+                        <p>Agent de Police Judiciaire</p>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
                     </div>
                 </div>
             </div>
 
             <div id="page-personnel" class="page">
                 <div class="panel">
-                    <div class="panel-head"><h3><i class="fas fa-users"></i> Tableau des Effectifs</h3></div>
-                    <table class="data-table">
-                        <thead><tr><th width="50"></th><th>Identité</th><th>Dernière connexion</th><th>État</th></tr></thead>
-                        <tbody id="effectif-list"></tbody>
-                    </table>
+                    <div class="panel-head"><h3><i class="fas fa-users"></i> État des Effectifs</h3></div>
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Agent</th>
+                                    <th>Dernière activité</th>
+                                    <th>Statut Actuel</th>
+                                </tr>
+                            </thead>
+                            <tbody id="effectif-list">
+                                </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
