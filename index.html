@@ -20,20 +20,14 @@
                 <span id="modal-type" class="badge-modal">DOSSIER</span>
                 <button onclick="fermerModal()" class="btn-close"><i class="fas fa-times"></i></button>
             </div>
-            
             <div class="modal-content-scroll">
-                <h2 id="modal-title">Titre du rapport</h2>
-                
+                <h2 id="modal-title">Titre</h2>
                 <div class="modal-meta">
-                    <div class="meta-item"><i class="fas fa-user-shield"></i> <span id="modal-author">Officier</span></div>
-                    <div class="meta-item"><i class="far fa-calendar-alt"></i> <span id="modal-date">Date</span></div>
+                    <div class="meta-item"><i class="fas fa-user-shield"></i> <span id="modal-author">...</span></div>
+                    <div class="meta-item"><i class="far fa-calendar-alt"></i> <span id="modal-date">...</span></div>
                 </div>
-                
-                <div class="modal-text-body">
-                    <p id="modal-content">Chargement...</p>
-                </div>
+                <div class="modal-text-body"><p id="modal-content">...</p></div>
             </div>
-            
             <div class="modal-footer" id="modal-footer-actions"></div>
         </div>
     </div>
@@ -45,10 +39,7 @@
             </div>
             <h1>Police Judiciaire</h1>
             <p>Portail Administratif Sécurisé</p>
-            
-            <button onclick="loginWithDiscord()" class="btn-discord">
-                <i class="fab fa-discord"></i> Se connecter via Discord
-            </button>
+            <button onclick="loginWithDiscord()" class="btn-discord"><i class="fab fa-discord"></i> Se connecter via Discord</button>
         </div>
     </div>
 
@@ -59,99 +50,65 @@
                 <div class="profile-card">
                     <img id="user-avatar" src="" alt="Profil">
                     <div class="profile-info">
-                        <h3 id="user-name">Chargement...</h3>
+                        <h3 id="user-name">...</h3>
                         <div id="header-status" class="status-pill offline">Hors Service</div>
                     </div>
                 </div>
             </div>
-
             <div class="nav-section">NAVIGATION</div>
-
             <ul class="nav-links">
-                <li onclick="changerPage('accueil')" id="nav-accueil" class="active">
-                    <i class="fas fa-home"></i> Accueil
-                </li>
-                <li onclick="changerPage('service')" id="nav-service">
-                    <i class="fas fa-stopwatch"></i> Service
-                </li>
-                <li onclick="changerPage('rapports')" id="nav-rapports">
-                    <i class="fas fa-folder-open"></i> Rapports
-                </li>
-                <li onclick="changerPage('messagerie')" id="nav-messagerie">
-                    <i class="fas fa-envelope"></i> Messagerie
-                </li>
-                <li onclick="changerPage('concours')" id="nav-concours">
-                    <i class="fas fa-graduation-cap"></i> Concours
-                </li>
-                <li onclick="changerPage('personnel')" id="nav-personnel">
-                    <i class="fas fa-users"></i> Effectifs
-                </li>
+                <li onclick="changerPage('accueil')" id="nav-accueil" class="active"><i class="fas fa-home"></i> Accueil</li>
+                <li onclick="changerPage('service')" id="nav-service"><i class="fas fa-stopwatch"></i> Service</li>
+                <li onclick="changerPage('rapports')" id="nav-rapports"><i class="fas fa-folder-open"></i> Rapports</li>
+                <li onclick="changerPage('messagerie')" id="nav-messagerie"><i class="fas fa-comment-alt"></i> Messagerie</li>
+                <li onclick="changerPage('concours')" id="nav-concours"><i class="fas fa-graduation-cap"></i> Concours</li>
+                <li onclick="changerPage('personnel')" id="nav-personnel"><i class="fas fa-users"></i> Effectifs</li>
             </ul>
-
             <div class="sidebar-footer">
-                <button onclick="logout()" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </button>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
             </div>
         </nav>
 
         <main class="main-content">
-            
             <header class="top-bar">
-                <div class="breadcrumb">
-                    <h2>Terminal Central</h2>
-                    <span>Version 5.0 • Live Sync</span>
-                </div>
-                <div class="network-status">
-                    <span class="dot-pulse"></span> Réseau Actif
-                </div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 5.2 • Live Sync</span></div>
+                <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
             <div id="page-accueil" class="page active">
                 <div class="stats-row">
-                    <div class="stat-card">
-                        <div class="icon-box blue"><i class="fas fa-file-alt"></i></div>
-                        <div class="stat-info"><h3>Rapports</h3><span id="stat-total">0</span></div>
-                    </div>
-                    <div class="stat-card red">
-                        <div class="icon-box red"><i class="fas fa-handcuffs"></i></div>
-                        <div class="stat-info"><h3>Arrestations</h3><span id="stat-arrest">0</span></div>
-                    </div>
-                    <div class="stat-card orange">
-                        <div class="icon-box orange"><i class="fas fa-shield-alt"></i></div>
-                        <div class="stat-info"><h3>PVI</h3><span id="stat-pvi">0</span></div>
-                    </div>
-                    <div class="stat-card purple">
-                        <div class="icon-box purple"><i class="fas fa-gavel"></i></div>
-                        <div class="stat-info"><h3>Plaintes</h3><span id="stat-plainte">0</span></div>
-                    </div>
+                    <div class="stat-card"><div class="icon-box blue"><i class="fas fa-file-alt"></i></div><div class="stat-info"><h3>Rapports</h3><span id="stat-total">0</span></div></div>
+                    <div class="stat-card red"><div class="icon-box red"><i class="fas fa-handcuffs"></i></div><div class="stat-info"><h3>Arrestations</h3><span id="stat-arrest">0</span></div></div>
+                    <div class="stat-card orange"><div class="icon-box orange"><i class="fas fa-shield-alt"></i></div><div class="stat-info"><h3>PVI</h3><span id="stat-pvi">0</span></div></div>
+                    <div class="stat-card purple"><div class="icon-box purple"><i class="fas fa-gavel"></i></div><div class="stat-info"><h3>Plaintes</h3><span id="stat-plainte">0</span></div></div>
                 </div>
-
                 <div class="panel">
                     <div class="panel-head"><h3><i class="fas fa-history"></i> Fil d'activité</h3></div>
-                    <div id="live-reports-list" class="list-scrollable">
-                        <div class="loader">Chargement des données...</div>
-                    </div>
+                    <div id="live-reports-list" class="list-scrollable"><div class="loader">Chargement...</div></div>
                 </div>
             </div>
 
             <div id="page-service" class="page">
                 <div class="service-center-wrapper">
-                    <div class="service-box">
+                    <div class="service-header-text">
                         <h2>Gestion de Service</h2>
-                        <p>Signalez votre prise ou fin de service au central.</p>
-                        
-                        <div class="service-actions">
-                            <button class="btn-big start" onclick="toggleServiceButton('prise')">
-                                <i class="fas fa-play"></i> PRISE DE SERVICE
-                            </button>
-                            <button class="btn-big end" onclick="toggleServiceButton('fin')">
-                                <i class="fas fa-stop"></i> FIN DE SERVICE
-                            </button>
+                        <p>Sélectionnez une action pour mettre à jour votre statut.</p>
+                        <div class="current-status-pill">
+                            ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span>
                         </div>
-
-                        <div class="status-display">
-                            État actuel : <span id="txt-status-big">HORS SERVICE</span>
+                    </div>
+                    
+                    <div class="service-actions-cards">
+                        <div class="action-card start-card" onclick="toggleServiceButton('prise')">
+                            <div class="icon-circle"><i class="fas fa-play"></i></div>
+                            <h3>Prise de Service</h3>
+                            <p>Commencer ma patrouille</p>
+                        </div>
+                        
+                        <div class="action-card end-card" onclick="toggleServiceButton('fin')">
+                            <div class="icon-circle"><i class="fas fa-stop"></i></div>
+                            <h3>Fin de Service</h3>
+                            <p>Terminer et rentrer</p>
                         </div>
                     </div>
                 </div>
@@ -162,8 +119,7 @@
                     <div class="panel-head"><h3><i class="fas fa-pen-nib"></i> Nouveau Dossier</h3></div>
                     <div class="form-content">
                         <div class="input-group">
-                            <label>Titre de la procédure</label>
-                            <input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
+                            <label>Titre</label><input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
                         </div>
                         <div class="input-group">
                             <label>Catégorie</label>
@@ -171,26 +127,36 @@
                                 <option value="INFO">Information</option>
                                 <option value="ARRESTATION">Arrestation</option>
                                 <option value="AMENDE">Amende</option>
-                                <option value="PVI">PVI (Intervention)</option>
+                                <option value="PVI">PVI</option>
                                 <option value="PLAINTE">Plainte</option>
                             </select>
                         </div>
                         <div class="input-group full">
-                            <label>Rapport détaillé</label>
-                            <textarea id="pv-content" rows="12" placeholder="Saisissez les détails ici..."></textarea>
+                            <label>Détails</label><textarea id="pv-content" rows="12" placeholder="Saisissez les détails..."></textarea>
                         </div>
-                        <button class="btn-submit" onclick="envoyerRapport()">Enregistrer et Transmettre</button>
+                        <button class="btn-submit" onclick="envoyerRapport()">Transmettre</button>
                     </div>
                 </div>
             </div>
 
             <div id="page-messagerie" class="page">
-                <div class="chat-interface">
-                    <div class="chat-top"><h3><i class="fas fa-comments"></i> Canal Sécurisé</h3></div>
-                    <div id="chat-box" class="chat-area"></div>
+                <div class="chat-wrapper">
+                    <div class="chat-top-bar">
+                        <div class="chat-info">
+                            <i class="fas fa-hashtag"></i>
+                            <span>général-police</span>
+                        </div>
+                        <div class="chat-status"><span class="dot-online"></span> En ligne</div>
+                    </div>
+                    
+                    <div id="chat-box" class="chat-area">
+                        </div>
+                    
                     <div class="chat-input-zone">
-                        <input type="text" id="mail-input" placeholder="Message à l'unité...">
-                        <button onclick="envoyerMail()" class="btn-chat-send"><i class="fas fa-paper-plane"></i></button>
+                        <div class="input-pill">
+                            <input type="text" id="mail-input" placeholder="Envoyer un message...">
+                            <button onclick="envoyerMail()" class="btn-chat-send"><i class="fas fa-paper-plane"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -200,14 +166,12 @@
                     <div class="card-item">
                         <i class="fas fa-user-secret icon-bg"></i>
                         <h3>Concours OPJ</h3>
-                        <p>Officier de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Ouvrir le dossier</a>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Ouvrir</a>
                     </div>
                     <div class="card-item">
                         <i class="fas fa-user-shield icon-bg"></i>
                         <h3>Concours APJ</h3>
-                        <p>Agent de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Ouvrir le dossier</a>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Ouvrir</a>
                     </div>
                 </div>
             </div>
@@ -221,10 +185,8 @@
                     </table>
                 </div>
             </div>
-
         </main>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
