@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Police Judiciaire - Intranet</title>
+    <title>MDT Police - Intranet</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
                 <i class="fas fa-shield-alt fa-4x" style="color: #3b82f6; margin-bottom: 15px;"></i>
             </div>
             <h1 style="font-weight: 800; color: #111827;">Intranet Sécurisé</h1>
-            <p style="color: #6b7280; margin-bottom: 10px;">Police Judiciaire STML</p>
+            <p style="color: #6b7280; margin-bottom: 10px;">Police & Gendarmerie</p>
             
             <button onclick="loginWithDiscord()" class="btn-discord">
                 <i class="fab fa-discord"></i> Se connecter avec Discord
@@ -38,10 +38,10 @@
 
             <ul class="menu-list">
                 <li onclick="changerPage('accueil')" id="nav-accueil" class="active">
-                    <i class="fa-solid fa-house"></i> Accueil
+                    <i class="fas fa-chart-pie"></i> Accueil
                 </li>
                 <li onclick="changerPage('service')" id="nav-service">
-                    <i class="fa-solid fa-book"></i> Service
+                    <i class="fas fa-user-clock"></i> Gestion Service
                 </li>
                 <li onclick="changerPage('rapports')" id="nav-rapports">
                     <i class="fas fa-file-signature"></i> Rapports
@@ -70,25 +70,25 @@
             <div id="page-accueil" class="page active">
                 <div class="stats-grid">
                     <div class="stat-box blue">
-                        <h3>RAPPORTS TOTAUX</h3>
+                        <h3>Total Rapports</h3>
                         <span id="stat-total">0</span>
                     </div>
                     <div class="stat-box red">
-                        <h3>PLAINTE</h3>
+                        <h3>Arrestations</h3>
                         <span id="stat-arrest">0</span>
                     </div>
                     <div class="stat-box orange">
-                        <h3>PVI</h3>
+                        <h3>Interventions</h3>
                         <span id="stat-inter">0</span>
                     </div>
                     <div class="stat-box green">
-                        <h3>AMENDES</h3>
+                        <h3>Amendes</h3>
                         <span id="stat-amende">0</span>
                     </div>
                 </div>
                 <div class="form-panel">
                     <h3>ℹ️ Notes de Service</h3>
-                    <p style="color: #4b5563; line-height: 1.6;">Bienvenue sur la version V2 de l'Intranet. Le système est optimisé pour un usage rapide. Merci de vérifier vos fins de service.</p>
+                    <p style="color: #4b5563; line-height: 1.6;">Bienvenue sur la version V2 du MDT. Le système est optimisé pour un usage rapide. Merci de vérifier vos fins de service.</p>
                 </div>
             </div>
 
@@ -114,9 +114,10 @@
                     
                     <label style="font-weight: 600; font-size: 13px;">Catégorie</label>
                     <select id="pv-type">
-                        <option value="INFO">PVI</option>
-                        <option value="ARRESTATION">ARRESTATION</option>
-                        <option value="INTERVENTION">PLAINTE</option>
+                        <option value="INFO">Information</option>
+                        <option value="ARRESTATION">Arrestation</option>
+                        <option value="AMENDE">Amende</option>
+                        <option value="INTERVENTION">Intervention</option>
                     </select>
 
                     <label style="font-weight: 600; font-size: 13px;">Détails des faits</label>
@@ -159,6 +160,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
