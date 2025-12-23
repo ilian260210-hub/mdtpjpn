@@ -176,70 +176,74 @@ input, textarea { user-select: text; font-family: 'Inter', sans-serif; }
 }
 
 /* =========================================
-   7. TABLEAU PERSONNEL (MODERNE)
+   7. TABLEAU PERSONNEL (COMPACT STYLE RÉTRO)
    ========================================= */
 .table-container {
     overflow-x: auto;
-    border-radius: 0 0 16px 16px;
 }
 
 .modern-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; /* Colle les bordures */
     background: white;
 }
 
 .modern-table th {
     text-align: left;
-    padding: 20px 30px;
-    background: #f8fafc;
+    /* PADDING RÉDUIT (avant: 20px 30px) */
+    padding: 12px 16px;
+    background: #f1f5f9; /* Gris un peu plus foncé */
     color: var(--text-muted);
     font-weight: 700;
-    font-size: 12px;
+    /* POLICE PLUS PETITE */
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border); /* Bordure plus marquée sous les titres */
 }
 
 .modern-table td {
-    padding: 18px 30px;
-    border-bottom: 1px solid #f1f5f9;
+    /* PADDING RÉDUIT POUR DES LIGNES PLUS FINES (avant: 18px 30px) */
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
     vertical-align: middle;
-    font-size: 14px;
+    /* POLICE PLUS PETITE */
+    font-size: 13px;
     color: var(--text-dark);
     font-weight: 500;
 }
 
 .modern-table tr:hover td {
-    background: #fcfcfc;
+    background: #f8fafc;
 }
 
+/* Dernier élément sans bordure */
 .modern-table tr:last-child td {
     border-bottom: none;
 }
 
-/* Style de l'avatar dans le tableau */
+/* Avatar plus petit */
 .agent-cell-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px; /* Avant: 40px */
+    height: 32px; /* Avant: 40px */
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
 }
 
-/* Badge de statut dans le tableau */
+/* Badge de statut plus compact */
 .status-badge-table {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
+    gap: 5px;
+    padding: 2px 8px; /* Plus petit */
+    border-radius: 10px;
+    font-size: 11px; /* Plus petit */
+    font-weight: 700;
 }
 .st-on { background: #dcfce7; color: #166534; }
 .st-off { background: #fee2e2; color: #991b1b; }
-.dot-status { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.dot-status { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
 /* =========================================
    8. AUTRES (Stats, Forms)
@@ -283,3 +287,4 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
 @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } }
+
