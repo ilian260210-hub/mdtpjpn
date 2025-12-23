@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT Police - Intranet</title>
+    <title>MDT Police - Intranet V3</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <div class="logos">
-                <i class="fas fa-shield-alt fa-4x" style="color: #3b82f6; margin-bottom: 15px;"></i>
-            </div>
-            <h1 style="font-weight: 800; color: #111827;">Intranet Sécurisé</h1>
-            <p style="color: #6b7280; margin-bottom: 10px;">Police & Gendarmerie</p>
-            
-            <button onclick="loginWithDiscord()" class="btn-discord">
-                <i class="fab fa-discord"></i> Se connecter avec Discord
-            </button>
-            <p id="error-msg" style="color:#ef4444; display:none; margin-top:15px; font-weight:600;">⛔ Erreur d'accès</p>
+            <div class="logos"><i class="fas fa-shield-alt fa-4x" style="color: #3b82f6;"></i></div>
+            <h1>Intranet Unifié</h1>
+            <p>Données synchronisées en temps réel</p>
+            <button onclick="loginWithDiscord()" class="btn-discord"><i class="fab fa-discord"></i> Connexion via Discord</button>
         </div>
     </div>
 
     <div id="dashboard-screen" class="hidden">
-        
         <nav class="sidebar">
             <div class="user-box">
                 <img id="user-avatar" src="" alt="Avatar">
@@ -35,137 +31,89 @@
                     <div id="header-status" class="status-badge offline">Hors Service</div>
                 </div>
             </div>
-
             <ul class="menu-list">
-                <li onclick="changerPage('accueil')" id="nav-accueil" class="active">
-                    <i class="fas fa-chart-pie"></i> Tableau de bord
-                </li>
-                <li onclick="changerPage('service')" id="nav-service">
-                    <i class="fas fa-user-clock"></i> Gestion Service
-                </li>
-                <li onclick="changerPage('rapports')" id="nav-rapports">
-                    <i class="fas fa-file-signature"></i> Rapports
-                </li>
-                <li onclick="changerPage('concours')" id="nav-concours">
-                    <i class="fas fa-graduation-cap"></i> Examens
-                </li>
-                <li onclick="changerPage('personnel')" id="nav-personnel">
-                    <i class="fas fa-users"></i> Effectifs
-                </li>
-                <li onclick="logout()" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </li>
+                <li onclick="changerPage('accueil')" id="nav-accueil" class="active"><i class="fas fa-chart-line"></i> Accueil</li>
+                <li onclick="changerPage('service')" id="nav-service"><i class="fas fa-power-off"></i> Gestion Service</li>
+                <li onclick="changerPage('rapports')" id="nav-rapports"><i class="fas fa-file-contract"></i> Rapports</li>
+                <li onclick="changerPage('concours')" id="nav-concours"><i class="fas fa-graduation-cap"></i> Concours</li>
+                <li onclick="changerPage('personnel')" id="nav-personnel"><i class="fas fa-users"></i> Effectifs (Live)</li>
+                <li onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</li>
             </ul>
         </nav>
 
         <main class="content">
-            
             <header>
-                <h2>Terminal de Données</h2>
-                <div style="font-size: 13px; font-weight: 600; color: #047857; background: #d1fae5; padding: 6px 12px; border-radius: 20px;">
-                    🟢 Réseau Connecté
-                </div>
+                <h2>Terminal Central</h2>
+                <div class="system-ok">🟢 Base de Données Connectée</div>
             </header>
 
             <div id="page-accueil" class="page active">
                 <div class="stats-grid">
-                    <div class="stat-box blue">
-                        <h3>Total Rapports</h3>
-                        <span id="stat-total">0</span>
-                    </div>
-                    <div class="stat-box red">
-                        <h3>Arrestations</h3>
-                        <span id="stat-arrest">0</span>
-                    </div>
-                    <div class="stat-box orange">
-                        <h3>Interventions</h3>
-                        <span id="stat-inter">0</span>
-                    </div>
-                    <div class="stat-box green">
-                        <h3>Amendes</h3>
-                        <span id="stat-amende">0</span>
-                    </div>
+                    <div class="stat-box blue"><h3>Total Rapports</h3><span id="stat-total">...</span></div>
+                    <div class="stat-box red"><h3>Arrestations</h3><span id="stat-arrest">...</span></div>
+                    <div class="stat-box orange"><h3>Interventions</h3><span id="stat-inter">...</span></div>
+                    <div class="stat-box green"><h3>Amendes</h3><span id="stat-amende">...</span></div>
                 </div>
                 <div class="form-panel">
-                    <h3>ℹ️ Notes de Service</h3>
-                    <p style="color: #4b5563; line-height: 1.6;">Bienvenue. Les statistiques ont été réinitialisées pour la nouvelle session.</p>
+                    <h3>📄 Derniers Rapports (Synchronisés)</h3>
+                    <div id="live-reports-list" class="reports-container">
+                        <p style="color:#666; font-style:italic;">Chargement des données...</p>
+                    </div>
                 </div>
             </div>
 
             <div id="page-service" class="page">
                 <div class="service-container">
-                    <h2 style="margin-bottom: 20px;">État de Service</h2>
+                    <h2>Modifier mon statut</h2>
                     <div id="service-card" class="service-card is-offline">
                         <i id="service-icon" class="fas fa-user-slash"></i>
-                        <h1 id="service-text" style="font-size: 28px; font-weight: 800;">HORS SERVICE</h1>
+                        <h1 id="service-text">HORS SERVICE</h1>
                     </div>
-                    <button id="btn-service" onclick="toggleService()" class="btn-toggle" style="background: #1f2937; color: white;">
-                        PRENDRE MON SERVICE
-                    </button>
+                    <button id="btn-service" onclick="toggleService()" class="btn-toggle">PRENDRE MON SERVICE</button>
                 </div>
             </div>
 
             <div id="page-rapports" class="page">
                 <div class="form-panel">
-                    <h3 style="margin-bottom: 20px;">Nouveau Rapport</h3>
-                    
-                    <label style="font-weight: 600; font-size: 13px;">Sujet du rapport</label>
-                    <input type="text" id="pv-titre" placeholder="Ex: Vol de véhicule...">
-                    
-                    <label style="font-weight: 600; font-size: 13px;">Catégorie</label>
+                    <h3>Nouveau Rapport</h3>
+                    <input type="text" id="pv-titre" placeholder="Titre (ex: Refus d'obtempérer)">
                     <select id="pv-type">
                         <option value="INFO">Information</option>
                         <option value="ARRESTATION">Arrestation</option>
                         <option value="AMENDE">Amende</option>
                         <option value="INTERVENTION">Intervention</option>
                     </select>
-
-                    <label style="font-weight: 600; font-size: 13px;">Détails des faits</label>
-                    <textarea id="pv-content" rows="6" placeholder="Décrivez la situation..."></textarea>
-
-                    <button class="btn-submit" onclick="envoyerRapport()">Envoyer le rapport</button>
+                    <textarea id="pv-content" rows="6" placeholder="Faits constatés..."></textarea>
+                    <button class="btn-submit" onclick="envoyerRapport()">Enregistrer dans la Base</button>
                 </div>
             </div>
 
             <div id="page-concours" class="page">
                 <div class="concours-grid">
                     <div class="concours-item">
-                        <i class="fas fa-user-secret"></i>
-                        <h3>Concours OPJ</h3>
-                        <p style="margin-bottom: 15px; color: #6b7280;">Officier de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-link">Accéder au test</a>
+                        <i class="fas fa-user-secret"></i><h3>OPJ</h3>
+                        <a href="#" class="btn-link">Accéder au test</a>
                     </div>
                     <div class="concours-item">
-                        <i class="fas fa-user-shield"></i>
-                        <h3>Concours APJ</h3>
-                        <p style="margin-bottom: 15px; color: #6b7280;">Agent de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-link">Accéder au test</a>
+                        <i class="fas fa-user-shield"></i><h3>APJ</h3>
+                        <a href="#" class="btn-link">Accéder au test</a>
                     </div>
                 </div>
             </div>
 
             <div id="page-personnel" class="page">
                 <div class="form-panel">
-                    <h3><i class="fas fa-users"></i> État des Effectifs</h3>
-                    <p style="margin-bottom: 20px; font-size: 13px; color: #6b7280;">Liste des agents enregistrés.</p>
-                    
+                    <h3><i class="fas fa-users"></i> État des Effectifs en Temps Réel</h3>
+                    <p style="margin-bottom: 20px; color:#666; font-size:13px;">Affiche tous les agents connus du système.</p>
                     <table class="effectif-table">
-                        <thead>
-                            <tr>
-                                <th>Agent</th>
-                                <th>Grade</th>
-                                <th>Statut</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Avatar</th><th>Identité</th><th>Statut Actuel</th></tr></thead>
                         <tbody id="effectif-list">
                             </tbody>
                     </table>
                 </div>
             </div>
-
         </main>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
