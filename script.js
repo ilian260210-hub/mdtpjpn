@@ -236,17 +236,44 @@ function envoyerWebhook(url, title, color, desc) {
 }
 
 // --- EFFECTIFS ---
+// ... (LE DÉBUT DU FICHIER NE CHANGE PAS, GARDE TA CONFIGURATION) ...
+
+// --- EFFECTIFS (TABLEAU DESIGN) ---
 function ecouterEffectifs() {
-    db.collection("users").onSnapshot((s) => {
-        let h = "";
-        s.forEach(d => {
-            const a = d.data();
-            const col = a.enService ? "#10b981" : "#ef4444"; const txt = a.enService ? "En Service" : "Hors Service";
-            h += `<tr><td><img src="${a.avatar}"></td><td><b>${a.name}</b></td><td>${a.lastLogin?new Date(a.lastLogin.toDate()).toLocaleDateString():'-'}</td><td><span style="color:${col};font-weight:700">● ${txt}</span></td></tr>`;
+    db.collection("users").onSnapshot((snapshot) => {
+        let html = "";
+        snapshot.forEach(doc => {
+            const agent = doc.data();
+            
+            // Définition des styles selon le statut
+            const statusClass = agent.enService ? "st-on" : "st-off";
+            const statusText = agent.enService ? "En Service" : "Hors Service";
+            const lastSeen = agent.lastLogin ? new Date(agent.lastLogin.toDate()).toLocaleDateString() : '-';
+
+            html += `
+                <tr>
+                    <td>
+                        <img src="${agent.avatar}" class="agent-cell-avatar" alt="Avatar">
+                    </td>
+                    <td>
+                        <strong>${agent.name}</strong>
+                    </td>
+                    <td style="color:#64748b; font-size:13px;">
+                        ${lastSeen}
+                    </td>
+                    <td>
+                        <span class="status-badge-table ${statusClass}">
+                            <div class="dot-status"></div> ${statusText}
+                        </span>
+                    </td>
+                </tr>
+            `;
         });
-        document.getElementById("effectif-list").innerHTML = h;
+        document.getElementById("effectif-list").innerHTML = html;
     });
 }
+
+// ... (LA FIN DU FICHIER NE CHANGE PAS) ...
 
 // Navigation
 function changerPage(id) {
@@ -256,3 +283,4 @@ function changerPage(id) {
     document.getElementById('nav-'+id).classList.add('active');
 }
 function logout() { localStorage.removeItem("mdt_final_session"); window.location.href=REDIRECT_URI; }
+
