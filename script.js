@@ -105,7 +105,7 @@ function lancerInterface() {
     verifierMonStatut();
 }
 
-// --- MESSAGERIE (NOUVELLE LOGIQUE) ---
+// --- MESSAGERIE ---
 function ecouterMails() {
     db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
         const box = document.getElementById("chat-box"); box.innerHTML = "";
@@ -136,13 +136,13 @@ function envoyerMail() {
         content: input.value, 
         authorName: currentUser.name, 
         authorId: currentUser.id,
-        authorAvatar: currentUser.avatar, // On ajoute l'avatar au message
+        authorAvatar: currentUser.avatar,
         date: new Date() 
     });
     input.value = "";
 }
 
-// --- BOUTONS SERVICE (CARTES) ---
+// --- BOUTONS SERVICE ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
@@ -153,7 +153,6 @@ function verifierMonStatut() {
 }
 
 function toggleServiceButton(action) {
-    // Logique simple : Prise = ON, Fin = OFF
     if(action === 'prise') enService = true;
     else enService = false;
 
