@@ -38,12 +38,11 @@ let currentUser = null;
 let enService = false;
 let isAdmin = false;
 
-// --- DÉMARRAGE ---
 window.onload = () => {
     const localUser = localStorage.getItem("mdt_user_session");
     if (localUser) {
         currentUser = JSON.parse(localUser);
-        verifierDroitsAdminLocal(); // Vérifie si admin dans la session
+        if(currentUser.admin) isAdmin = true;
         lancerInterface();
     } else {
         const fragment = new URLSearchParams(window.location.hash.slice(1));
@@ -52,7 +51,6 @@ window.onload = () => {
     }
 };
 
-// --- AUTHENTIFICATION ---
 function loginWithDiscord() {
     const scope = encodeURIComponent("identify guilds.members.read");
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${scope}`;
@@ -67,7 +65,6 @@ async function verifierUtilisateurDiscord(token) {
         if (!guildRes.ok) throw new Error("Erreur serveur");
         const member = await guildRes.json();
 
-        // Vérification Basique
         if (member.roles.some(r => ALLOWED_ROLES.includes(r))) {
             
             // Vérification Admin
@@ -81,7 +78,6 @@ async function verifierUtilisateurDiscord(token) {
             };
             localStorage.setItem("mdt_user_session", JSON.stringify(currentUser));
             
-            // Mise à jour annuaire
             db.collection("users").doc(currentUser.id).set({
                 name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date()
             }, { merge: true });
@@ -93,10 +89,6 @@ async function verifierUtilisateurDiscord(token) {
     } catch (e) { console.error(e); }
 }
 
-function verifierDroitsAdminLocal() {
-    if(currentUser.admin === true) isAdmin = true;
-}
-
 function lancerInterface() {
     document.getElementById("login-screen").classList.add("hidden");
     document.getElementById("dashboard-screen").classList.remove("hidden");
@@ -104,176 +96,187 @@ function lancerInterface() {
     document.getElementById("user-avatar").src = currentUser.avatar;
     window.history.replaceState({}, document.title, "/");
 
-    // Afficher onglet Admin si Admin
-    if(isAdmin) {
-        document.getElementById("nav-admin").classList.remove("hidden");
-    }
-
     ecouterRapports();
     ecouterEffectifs();
+    ecouterMails(); // Lancer la messagerie
     verifierMonStatut();
 }
 
-// --- SYNCHRONISATION FIREBASE ---
+// --- MESSAGERIE INTRANET ---
+function ecouterMails() {
+    db.collection("mails").orderBy("date", "asc").limitToLast(50)
+    .onSnapshot((snapshot) => {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = "";
+        
+        snapshot.forEach(doc => {
+            const msg = doc.data();
+            const isMe = msg.authorId === currentUser.id;
+            const bubbleClass = isMe ? "msg-mine" : "msg-other";
+            
+            chatBox.innerHTML += `
+                <div class="msg-bubble ${bubbleClass}">
+                    <span class="msg-info">${msg.authorName} • ${new Date(msg.date.toDate()).toLocaleTimeString()}</span>
+                    ${msg.content}
+                </div>
+            `;
+        });
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll auto en bas
+    });
+}
+
+function envoyerMail() {
+    const input = document.getElementById("mail-input");
+    const text = input.value;
+    if(!text) return;
+
+    db.collection("mails").add({
+        content: text,
+        authorName: currentUser.name,
+        authorId: currentUser.id,
+        date: new Date()
+    });
+    input.value = "";
+}
+
+// --- RAPPORTS & ADMIN ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30)
     .onSnapshot((snapshot) => {
-        let stats = { total: 0, arrest: 0, pvi: 0, amende: 0, plainte: 0 };
+        let stats = { total: 0, arrest: 0, pvi: 0, plainte: 0 };
         let htmlList = "";
 
         snapshot.forEach(doc => {
             const data = doc.data();
             const id = doc.id;
             stats.total++;
-            
-            let tagClass = "rt-info";
-            if(data.type === "ARRESTATION") { stats.arrest++; tagClass = "rt-arrest"; }
-            else if(data.type === "AMENDE") { stats.amende++; tagClass = "rt-amende"; }
-            else if(data.type === "PVI") { stats.pvi++; tagClass = "rt-pvi"; }
-            else if(data.type === "PLAINTE") { stats.plainte++; tagClass = "rt-plainte"; }
+            if(data.type === "ARRESTATION") stats.arrest++;
+            if(data.type === "PVI") stats.pvi++;
+            if(data.type === "PLAINTE") stats.plainte++;
 
-            // On rend l'élément cliquable pour ouvrir le modal
-            // On échappe les guillemets simples dans le titre pour le onclick
+            // Échapper les apostrophes pour le onclick
             const safeTitle = data.titre.replace(/'/g, "\\'"); 
             
             htmlList += `
                 <div class="report-mini-item" onclick="ouvrirModalRapport('${id}')">
-                    <div>
-                        <span class="rt-tag ${tagClass}">${data.type}</span>
-                        <span style="font-weight:600; font-size:14px;">${data.titre}</span>
-                    </div>
-                    <div style="font-size:12px; color:#999;">
-                        ${new Date(data.date.toDate()).toLocaleDateString()}
-                    </div>
+                    <div><b>${data.type}</b> - ${data.titre}</div>
+                    <div style="font-size:12px; color:#999;">${new Date(data.date.toDate()).toLocaleDateString()}</div>
                 </div>
             `;
         });
 
-        // Update UI
         document.getElementById("stat-total").innerText = stats.total;
         document.getElementById("stat-arrest").innerText = stats.arrest;
         document.getElementById("stat-pvi").innerText = stats.pvi;
-        document.getElementById("stat-amende").innerText = stats.amende;
         document.getElementById("stat-plainte").innerText = stats.plainte;
         document.getElementById("live-reports-list").innerHTML = htmlList;
     });
 }
 
-function ecouterEffectifs() {
-    db.collection("users").onSnapshot((snapshot) => {
-        let html = "";
-        snapshot.forEach(doc => {
-            const agent = doc.data();
-            const tag = agent.enService ? `<span class="tag-on">EN SERVICE</span>` : `<span class="tag-off">HORS SERVICE</span>`;
-            html += `<tr><td><img src="${agent.avatar}"></td><td style="font-weight:600">${agent.name}</td><td>${tag}</td></tr>`;
-        });
-        document.getElementById("effectif-list").innerHTML = html;
-    });
-}
-
-// --- GESTION DU MODAL (DÉTAILS & SUPPRESSION) ---
 async function ouvrirModalRapport(id) {
     const doc = await db.collection("reports").doc(id).get();
     if(!doc.exists) return;
     const data = doc.data();
 
-    // Remplissage
     document.getElementById("modal-title").innerText = data.titre;
     document.getElementById("modal-type").innerText = data.type;
     document.getElementById("modal-author").innerText = data.officer;
     document.getElementById("modal-date").innerText = new Date(data.date.toDate()).toLocaleString();
     document.getElementById("modal-content").innerText = data.content;
 
-    // Bouton Supprimer (Seulement si Admin)
+    // PROTECTION ADMIN : Le bouton supprimer n'apparaît que si isAdmin est true
     const footer = document.getElementById("modal-footer-actions");
-    footer.innerHTML = ""; // Reset
+    footer.innerHTML = ""; 
     if(isAdmin) {
-        footer.innerHTML = `<button onclick="supprimerRapport('${id}')" class="btn-delete"><i class="fas fa-trash"></i> Supprimer ce rapport</button>`;
+        footer.innerHTML = `<button onclick="supprimerRapport('${id}')" class="btn-delete"><i class="fas fa-trash"></i> Supprimer (Admin)</button>`;
     }
 
-    // Afficher
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
 
-function fermerModal() {
-    document.getElementById("modal-overlay").classList.add("hidden");
-}
+function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
 
 function supprimerRapport(id) {
-    if(confirm("Êtes-vous sûr de vouloir supprimer définitivement ce rapport ?")) {
-        db.collection("reports").doc(id).delete()
-        .then(() => {
-            alert("Rapport supprimé.");
-            fermerModal();
-        })
-        .catch(err => alert("Erreur: " + err));
+    if(confirm("Confirmer la suppression ?")) {
+        db.collection("reports").doc(id).delete().then(() => { fermerModal(); });
     }
 }
 
-// --- ACTIONS UTILISATEUR ---
+// --- EFFECTIFS (V3 Style) ---
+function ecouterEffectifs() {
+    db.collection("users").onSnapshot((snapshot) => {
+        let html = "";
+        snapshot.forEach(doc => {
+            const agent = doc.data();
+            const color = agent.enService ? "green" : "red";
+            const text = agent.enService ? "En Service" : "Hors Service";
+            
+            html += `
+                <tr>
+                    <td><img src="${agent.avatar}"></td>
+                    <td><b>${agent.name}</b></td>
+                    <td>${agent.lastLogin ? new Date(agent.lastLogin.toDate()).toLocaleDateString() : '-'}</td>
+                    <td><span class="dot" style="background:${color}"></span> ${text}</td>
+                </tr>
+            `;
+        });
+        document.getElementById("effectif-list").innerHTML = html;
+    });
+}
 
+// --- SERVICE (BOUTONS) ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
             enService = true;
-            document.getElementById("service-toggle").checked = true;
-            updateUIService(true);
+            updateUIStatus(true);
         }
     });
 }
 
-function toggleService() {
-    // Récupérer l'état de la checkbox
-    const isChecked = document.getElementById("service-toggle").checked;
-    enService = isChecked;
-    
-    updateUIService(enService);
+function toggleServiceButton(action) {
+    if(action === 'prise') enService = true;
+    else enService = false;
 
-    // Update Firebase
+    updateUIStatus(enService);
+    
     db.collection("users").doc(currentUser.id).update({ enService: enService });
 
-    // Webhook
     const msg = enService ? "🟢 PRISE DE SERVICE" : "🔴 FIN DE SERVICE";
     const color = enService ? 3069299 : 15158332;
     envoyerWebhook(WEBHOOK_PDS, msg, color);
 }
 
-function updateUIService(isOn) {
-    const txt = document.getElementById("service-text-status");
+function updateUIStatus(isOn) {
+    const txt = document.getElementById("txt-status");
     const header = document.getElementById("header-status");
-    
-    if (isOn) {
-        txt.innerText = "EN SERVICE"; txt.style.color = "#10b981";
+    if(isOn) {
+        txt.innerText = "EN SERVICE"; txt.style.color = "green";
         header.className = "status-badge online"; header.innerText = "En Service";
     } else {
-        txt.innerText = "HORS SERVICE"; txt.style.color = "#991b1b";
+        txt.innerText = "HORS SERVICE"; txt.style.color = "red";
         header.className = "status-badge offline"; header.innerText = "Hors Service";
     }
 }
 
+// Fonction Envoi Rapport
 function envoyerRapport() {
     const titre = document.getElementById("pv-titre").value;
     const type = document.getElementById("pv-type").value;
     const content = document.getElementById("pv-content").value;
+    if (!titre || !content) return alert("Remplissez tout !");
 
-    if (!titre || !content) return alert("Champs vides !");
-
-    // Firebase
     db.collection("reports").add({
         titre: titre, type: type, content: content,
         officer: currentUser.name, officerId: currentUser.id, date: new Date()
     });
 
-    // Webhook (Couleurs adaptées)
-    let color = 3447003; // Info (Bleu)
-    if(type === "ARRESTATION") color = 15548997; // Rouge
-    if(type === "AMENDE") color = 5763719; // Vert
-    if(type === "PVI") color = 15105570; // Orange
-    if(type === "PLAINTE") color = 9662683; // Violet
-
+    let color = 3447003; 
+    if(type === "ARRESTATION") color = 15548997;
+    
     const desc = `**Officier:** ${currentUser.name}\n**Titre:** ${titre}\n\n${content}`;
     envoyerWebhook(WEBHOOK_PV, `📄 RAPPORT : ${type}`, color, desc);
-
+    
     alert("Envoyé !");
     document.getElementById("pv-titre").value = "";
     document.getElementById("pv-content").value = "";
