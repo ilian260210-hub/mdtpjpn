@@ -39,7 +39,7 @@ let enService = false;
 let isAdmin = false;
 
 window.onload = () => {
-    const localUser = localStorage.getItem("mdt_session_v4");
+    const localUser = localStorage.getItem("mdt_v5_session");
     if (localUser) {
         currentUser = JSON.parse(localUser);
         if(currentUser.isAdmin) isAdmin = true;
@@ -74,7 +74,7 @@ async function verifierUtilisateurDiscord(token) {
                 avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
                 isAdmin: isAdmin
             };
-            localStorage.setItem("mdt_session_v4", JSON.stringify(currentUser));
+            localStorage.setItem("mdt_v5_session", JSON.stringify(currentUser));
             
             db.collection("users").doc(currentUser.id).set({
                 name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date()
@@ -100,51 +100,37 @@ function lancerInterface() {
     verifierMonStatut();
 }
 
-// --- BOUTON SERVICE UNIQUE ---
+// --- BOUTONS SERVICE ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
             enService = true;
-            updateUIService(true);
+            updateUIStatus(true);
         }
     });
 }
 
-function toggleServiceAction() {
-    // Si on est en service, on passe hors service, et inversement
-    enService = !enService;
-    updateUIService(enService);
-    
-    // Update DB
+function toggleServiceButton(action) {
+    if(action === 'prise') enService = true;
+    else enService = false;
+
+    updateUIStatus(enService);
     db.collection("users").doc(currentUser.id).update({ enService: enService });
 
-    // Webhook
     const msg = enService ? "🟢 PRISE DE SERVICE" : "🔴 FIN DE SERVICE";
     const color = enService ? 3069299 : 15158332;
     envoyerWebhook(WEBHOOK_PDS, msg, color, `**Agent:** ${currentUser.name}\n**Action:** ${msg}`);
 }
 
-function updateUIService(isOn) {
-    const btn = document.getElementById("btn-service-toggle");
-    const icon = document.getElementById("service-btn-icon");
-    const text = document.getElementById("service-btn-text");
-    const statusTxt = document.getElementById("txt-status-big");
-    const headerStatus = document.getElementById("header-status");
-
-    if (isOn) {
-        // Mode EN SERVICE (Bouton devient Rouge pour dire 'Stop')
-        btn.className = "btn-service-morph on";
-        icon.className = "fas fa-stop";
-        text.innerText = "FIN DE SERVICE";
-        statusTxt.innerText = "EN SERVICE"; statusTxt.style.color = "#10b981";
-        headerStatus.className = "status-dot-text online"; headerStatus.innerText = "En Service";
+function updateUIStatus(isOn) {
+    const txt = document.getElementById("txt-status-big");
+    const header = document.getElementById("header-status");
+    if(isOn) {
+        txt.innerText = "EN SERVICE"; txt.style.color = "#10b981";
+        header.className = "status-dot-text online"; header.innerText = "En Service";
     } else {
-        // Mode HORS SERVICE (Bouton devient Vert pour dire 'Start')
-        btn.className = "btn-service-morph off";
-        icon.className = "fas fa-power-off";
-        text.innerText = "PRENDRE MON SERVICE";
-        statusTxt.innerText = "HORS SERVICE"; statusTxt.style.color = "#ef4444";
-        headerStatus.className = "status-dot-text offline"; headerStatus.innerText = "Hors Service";
+        txt.innerText = "HORS SERVICE"; txt.style.color = "#ef4444";
+        header.className = "status-dot-text offline"; header.innerText = "Hors Service";
     }
 }
 
@@ -170,7 +156,7 @@ function envoyerMail() {
     input.value = "";
 }
 
-// --- RAPPORTS & EFFECTIFS ---
+// --- RAPPORTS ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
         let st = {t:0, a:0, p:0, pl:0}; let html="";
@@ -179,8 +165,9 @@ function ecouterRapports() {
             if(da.type==="ARRESTATION") st.a++; if(da.type==="PVI") st.p++; if(da.type==="PLAINTE") st.pl++;
             
             let tagC = "info"; 
-            if(da.type==="ARRESTATION") tagC="arrest"; if(da.type==="PVI") tagC="pvi"; if(da.type==="PLAINTE") tagC="plainte"; if(da.type==="AMENDE") tagC="amende";
+            if(da.type==="ARRESTATION") tagC="arrest"; if(da.type==="PVI") tagC="pvi"; if(da.type==="PLAINTE") tagC="plainte";
             
+            const safeTitle = da.titre.replace(/'/g, "\\'");
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
                         <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
                         <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
@@ -204,7 +191,7 @@ function ecouterEffectifs() {
     });
 }
 
-// --- MODAL & ENVOI ---
+// --- MODAL ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
@@ -217,7 +204,7 @@ async function ouvrirModal(id) {
     document.getElementById("modal-content").innerText = data.content;
     
     const ft = document.getElementById("modal-footer-actions"); ft.innerHTML="";
-    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" style="background:#ef4444;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;">Supprimer (Admin)</button>`;
+    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" style="background:#ef4444;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:700;">Supprimer</button>`;
     
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
@@ -245,4 +232,4 @@ function changerPage(id) {
     document.getElementById('page-'+id).classList.add('active');
     document.getElementById('nav-'+id).classList.add('active');
 }
-function logout() { localStorage.removeItem("mdt_session_v4"); window.location.href=REDIRECT_URI; }
+function logout() { localStorage.removeItem("mdt_v5_session"); window.location.href=REDIRECT_URI; }
