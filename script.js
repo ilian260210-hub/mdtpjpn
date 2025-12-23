@@ -39,10 +39,7 @@ let enService = false;
 let isAdmin = false;
 
 window.onload = () => {
-    // Changement de nom de session pour forcer un "Reset" propre
     const localUser = localStorage.getItem("mdt_final_session");
-    
-    // Si on revient de Discord avec un code
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = fragment.get("access_token");
 
@@ -55,7 +52,7 @@ window.onload = () => {
             if(currentUser.isAdmin) isAdmin = true;
             lancerInterface();
         } catch(e) {
-            logout(); // Si erreur, on déconnecte
+            logout();
         }
     }
 };
@@ -76,7 +73,6 @@ async function verifierUtilisateurDiscord(token) {
 
         if (member.roles.some(r => ALLOWED_ROLES.includes(r))) {
             isAdmin = member.roles.some(r => ADMIN_ROLES.includes(r));
-            
             currentUser = { 
                 id: user.id,
                 name: member.nick || user.global_name, 
@@ -91,8 +87,7 @@ async function verifierUtilisateurDiscord(token) {
 
             lancerInterface();
         } else {
-            alert("Accès refusé. Rôle manquant."); 
-            window.location.href = "/";
+            alert("Accès refusé."); window.location.href = "/";
         }
     } catch (e) { console.error(e); }
 }
@@ -110,7 +105,44 @@ function lancerInterface() {
     verifierMonStatut();
 }
 
-// --- SERVICE (2 BOUTONS) ---
+// --- MESSAGERIE (NOUVELLE LOGIQUE) ---
+function ecouterMails() {
+    db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
+        const box = document.getElementById("chat-box"); box.innerHTML = "";
+        s.forEach(d => {
+            const m = d.data(); 
+            const isMe = m.authorId === currentUser.id;
+            const rowClass = isMe ? "msg-row me" : "msg-row other";
+            
+            box.innerHTML += `
+                <div class="${rowClass}">
+                    ${!isMe ? `<img src="${m.authorAvatar}" class="msg-avatar">` : ''}
+                    <div class="msg-bubble">
+                        ${!isMe ? `<span class="msg-name">${m.authorName}</span>` : ''}
+                        ${m.content}
+                    </div>
+                </div>
+            `;
+        });
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+function envoyerMail() {
+    const input = document.getElementById("mail-input");
+    if(!input.value.trim()) return;
+    
+    db.collection("mails").add({ 
+        content: input.value, 
+        authorName: currentUser.name, 
+        authorId: currentUser.id,
+        authorAvatar: currentUser.avatar, // On ajoute l'avatar au message
+        date: new Date() 
+    });
+    input.value = "";
+}
+
+// --- BOUTONS SERVICE (CARTES) ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
@@ -121,6 +153,7 @@ function verifierMonStatut() {
 }
 
 function toggleServiceButton(action) {
+    // Logique simple : Prise = ON, Fin = OFF
     if(action === 'prise') enService = true;
     else enService = false;
 
@@ -167,6 +200,7 @@ function ecouterRapports() {
     });
 }
 
+// --- MODAL ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
@@ -179,13 +213,14 @@ async function ouvrirModal(id) {
     document.getElementById("modal-content").innerText = data.content;
     
     const ft = document.getElementById("modal-footer-actions"); ft.innerHTML="";
-    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" class="btn-delete">Supprimer</button>`;
+    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" style="background:#fee2e2;color:#991b1b;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:700;">Supprimer</button>`;
     
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
 function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
 function delReport(id) { if(confirm("Supprimer ?")) db.collection("reports").doc(id).delete().then(()=>fermerModal()); }
 
+// --- ENVOI ---
 function envoyerRapport() {
     const t=document.getElementById("pv-titre").value; const ty=document.getElementById("pv-type").value; const c=document.getElementById("pv-content").value;
     if(!t||!c) return alert("Remplissez tout");
@@ -201,23 +236,6 @@ function envoyerWebhook(url, title, color, desc) {
     fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({embeds:[{title:title, description:desc, color:color, thumbnail:{url:currentUser.avatar}}]}) });
 }
 
-// --- MESSAGERIE ---
-function ecouterMails() {
-    db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
-        const box = document.getElementById("chat-box"); box.innerHTML = "";
-        s.forEach(d => {
-            const m = d.data(); const isMe = m.authorId === currentUser.id;
-            box.innerHTML += `<div class="msg-bubble ${isMe?'msg-mine':'msg-other'}"><span class="msg-meta">${m.authorName}</span>${m.content}</div>`;
-        });
-        box.scrollTop = box.scrollHeight;
-    });
-}
-function envoyerMail() {
-    const i = document.getElementById("mail-input"); if(!i.value) return;
-    db.collection("mails").add({ content:i.value, authorName:currentUser.name, authorId:currentUser.id, date:new Date() });
-    i.value="";
-}
-
 // --- EFFECTIFS ---
 function ecouterEffectifs() {
     db.collection("users").onSnapshot((s) => {
@@ -231,6 +249,7 @@ function ecouterEffectifs() {
     });
 }
 
+// Navigation
 function changerPage(id) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-links li').forEach(l=>l.classList.remove('active'));
