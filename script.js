@@ -1,201 +1,223 @@
-// ==========================================
-// ⚠️ CONFIGURATION (REMPLIS TES INFOS ICI) ⚠️
-// ==========================================
+// =========================================================
+// 🛑 CONFIGURATION OBLIGATOIRE (REMPLIS CECI)
+// =========================================================
 
-const CLIENT_ID = "1452733483922358363";      
-const GUILD_ID = "1453095674638766161";     
-const REDIRECT_URI = "https://mdtpjpn.vercel.app"; 
+const CLIENT_ID = "1452733483922358363"; 
+const GUILD_ID = "1453095674638766161"; 
+const REDIRECT_URI = "https://mdtpjpn.vercel.app"; // Pas de slash à la fin
 
+// IDs des rôles autorisés
 const ALLOWED_ROLES = [
     "1453098124342984727"
 ];
 
+// WEBHOOKS
 const WEBHOOK_PDS = "https://discord.com/api/webhooks/1453106174269456424/JqbDXXfYJWeFH9yTB7JEUgSRdkmr5DjZNIxiLb_PItwanTmJY9gJuhLs0s1ntm15qI9e";
 const WEBHOOK_PV = "https://discord.com/api/webhooks/1453106369765838850/g53oZ0v0hVE_gtcZ_UA6Lbm1JSXVP8QUqpvZEo4431gOeEqAhopvcbX74TrbRKmjjAM2";
 
-// ==========================================
+// =========================================================
 
 let currentUser = null;
-let serviceStatus = false; // false = OFF, true = ON
+let enService = false;
 
-// --- STATS SYSTEM (Sauvegarde locale) ---
+// Gestion des Stats
 const stats = {
-    arrestations: parseInt(localStorage.getItem('stats_arrest')) || 0,
-    amendes: parseInt(localStorage.getItem('stats_amende')) || 0,
-    interventions: parseInt(localStorage.getItem('stats_inter')) || 0,
-    total: parseInt(localStorage.getItem('stats_total')) || 0
+    total: parseInt(localStorage.getItem('st_total')) || 0,
+    arrest: parseInt(localStorage.getItem('st_arrest')) || 0,
+    amende: parseInt(localStorage.getItem('st_amende')) || 0,
+    inter: parseInt(localStorage.getItem('st_inter')) || 0
 };
 
-function updateStatsDisplay() {
-    document.getElementById('count-arrest').innerText = stats.arrestations;
-    document.getElementById('count-amende').innerText = stats.amendes;
-    document.getElementById('count-inter').innerText = stats.interventions;
-    document.getElementById('count-total').innerText = stats.total;
-}
-
-function incrementStat(type) {
-    if (type === 'ARRESTATION') stats.arrestations++;
-    else if (type === 'AMENDE') stats.amendes++;
-    else if (type === 'INTERVENTION') stats.interventions++;
+// --- 1. DÉMARRAGE (C'est ici que la magie opère) ---
+window.onload = () => {
+    // A. Est-ce qu'on est déjà connecté ? (Mémoire)
+    const memoireUtilisateur = localStorage.getItem("mdt_user_session");
     
-    stats.total++;
+    if (memoireUtilisateur) {
+        // OUI -> On charge direct le dashboard
+        currentUser = JSON.parse(memoireUtilisateur);
+        lancerInterface();
+        majStats();
+        return; // On arrête là, pas besoin de vérifier Discord
+    }
 
-    // Sauvegarde
-    localStorage.setItem('stats_arrest', stats.arrestations);
-    localStorage.setItem('stats_amende', stats.amendes);
-    localStorage.setItem('stats_inter', stats.interventions);
-    localStorage.setItem('stats_total', stats.total);
-    
-    updateStatsDisplay();
-}
+    // B. Sinon, est-ce qu'on revient de Discord avec un token ?
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = fragment.get("access_token");
 
-// --- LOGIN DISCORD ---
+    if (accessToken) {
+        verifierUtilisateurDiscord(accessToken);
+    }
+};
+
 function loginWithDiscord() {
     const scope = encodeURIComponent("identify guilds.members.read");
     const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${scope}`;
     window.location.href = url;
 }
 
-window.onload = () => {
-    updateStatsDisplay(); // Charger les stats au démarrage
-    
-    const fragment = new URLSearchParams(window.location.hash.slice(1));
-    const accessToken = fragment.get("access_token");
-    if (accessToken) fetchDiscordData(accessToken);
-};
-
-async function fetchDiscordData(token) {
+async function verifierUtilisateurDiscord(token) {
     try {
+        // Récupération Profil
         const userRes = await fetch('https://discord.com/api/users/@me', { headers: { authorization: `Bearer ${token}` } });
         const user = await userRes.json();
         
+        // Récupération Serveur & Rôles
         const guildRes = await fetch(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, { headers: { authorization: `Bearer ${token}` } });
         
-        if (!guildRes.ok) throw new Error("Erreur serveur");
+        if (!guildRes.ok) throw new Error("Membre introuvable");
         const member = await guildRes.json();
         
-        if (member.roles.some(r => ALLOWED_ROLES.includes(r))) {
-            launchDashboard(user, member.nick || user.global_name);
+        // Vérification Rôle
+        const aLeRole = member.roles.some(r => ALLOWED_ROLES.includes(r));
+        
+        if (aLeRole) {
+            // Création de l'objet utilisateur
+            currentUser = { 
+                name: member.nick || user.global_name, 
+                avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` 
+            };
+
+            // SAUVEGARDE EN MÉMOIRE (C'est ça qui empêche le retour au login)
+            localStorage.setItem("mdt_user_session", JSON.stringify(currentUser));
+
+            lancerInterface();
         } else {
-            alert("Accès refusé");
+            alert("⛔ Accès refusé : Rôle insuffisant.");
+            window.location.href = "/";
         }
-    } catch (err) {
-        console.error(err);
+    } catch (e) {
+        console.error(e);
+        alert("Erreur de connexion.");
     }
 }
 
-function launchDashboard(user, nickname) {
-    currentUser = { name: nickname, avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` };
+function lancerInterface() {
+    // Masquer login, afficher dashboard
     document.getElementById("login-screen").classList.add("hidden");
     document.getElementById("dashboard-screen").classList.remove("hidden");
+    
+    // Remplir les infos
     document.getElementById("user-name").innerText = currentUser.name;
     document.getElementById("user-avatar").src = currentUser.avatar;
+    
+    // Nettoyer l'URL (enlève le token moche)
     window.history.replaceState({}, document.title, "/");
-}
-
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-    document.getElementById('btn-' + pageId).classList.add('active');
+    
+    majStats();
 }
 
 function logout() {
+    // On vide la mémoire pour vraiment déconnecter
+    localStorage.removeItem("mdt_user_session");
     window.location.href = REDIRECT_URI;
 }
 
-// --- NOUVEAU SYSTÈME ON/OFF (État) ---
-function toggleService() {
-    serviceStatus = !serviceStatus; // On inverse l'état
+// --- 2. NAVIGATION ---
+function changerPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.menu-list li').forEach(li => li.classList.remove('active'));
     
-    const display = document.getElementById('status-display');
-    const icon = document.getElementById('status-icon');
-    const text = document.getElementById('status-text');
-    const btn = document.getElementById('btn-pds');
-    const headerStatus = document.getElementById('header-status');
+    document.getElementById('page-' + pageId).classList.add('active');
+    document.getElementById('nav-' + pageId).classList.add('active');
+}
 
-    if (serviceStatus) {
-        // PASSER EN SERVICE
-        display.classList.remove('inactive-service');
-        display.classList.add('active-service');
+// --- 3. SERVICE ON/OFF ---
+function toggleService() {
+    if (!currentUser) return;
+    
+    enService = !enService;
+
+    const card = document.getElementById("service-card");
+    const icon = document.getElementById("service-icon");
+    const text = document.getElementById("service-text");
+    const btn = document.getElementById("btn-service");
+    const headerStatus = document.getElementById("header-status");
+
+    if (enService) {
+        card.className = "service-card is-online";
         icon.className = "fas fa-user-shield";
         text.innerText = "EN SERVICE";
+        btn.innerText = "FIN DE SERVICE";
+        btn.style.background = "#ef4444";
         
-        btn.classList.remove('off');
-        btn.classList.add('on');
-        btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> FIN DE SERVICE';
-        
-        headerStatus.classList.remove('offline');
-        headerStatus.classList.add('online');
+        headerStatus.className = "status-badge online";
         headerStatus.innerText = "En Service";
         
-        envoyerWebhookPDS(true);
+        envoyerWebhook(WEBHOOK_PDS, "🟢 PRISE DE SERVICE", 3069299);
     } else {
-        // PASSER HORS SERVICE
-        display.classList.remove('active-service');
-        display.classList.add('inactive-service');
+        card.className = "service-card is-offline";
         icon.className = "fas fa-user-slash";
         text.innerText = "HORS SERVICE";
-        
-        btn.classList.remove('on');
-        btn.classList.add('off');
-        btn.innerHTML = '<i class="fas fa-power-off"></i> PRENDRE MON SERVICE';
+        btn.innerText = "PRENDRE MON SERVICE";
+        btn.style.background = "#1f2937";
 
-        headerStatus.classList.remove('online');
-        headerStatus.classList.add('offline');
+        headerStatus.className = "status-badge offline";
         headerStatus.innerText = "Hors Service";
-
-        envoyerWebhookPDS(false);
+        
+        envoyerWebhook(WEBHOOK_PDS, "🔴 FIN DE SERVICE", 15158332);
     }
 }
 
-function envoyerWebhookPDS(isPrise) {
-    if (!currentUser) return;
-    const color = isPrise ? 3069299 : 15158332;
-    const msg = isPrise ? "🟢 PRISE DE SERVICE" : "🔴 FIN DE SERVICE";
-
-    fetch(WEBHOOK_PDS, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            embeds: [{
-                title: msg,
-                description: `**Agent:** ${currentUser.name}\n**Heure:** ${new Date().toLocaleTimeString()}`,
-                color: color,
-                thumbnail: { url: currentUser.avatar }
-            }]
-        })
-    });
-}
-
-function envoyerPV() {
+// --- 4. RAPPORTS & STATS ---
+function envoyerRapport() {
     if (!currentUser) return;
     const titre = document.getElementById("pv-titre").value;
     const type = document.getElementById("pv-type").value;
     const content = document.getElementById("pv-content").value;
 
-    if (!titre || !content) return alert("Remplissez tout !");
+    if (!titre || !content) return alert("Remplis tous les champs !");
+
+    // Incrémentation
+    stats.total++;
+    if(type === "ARRESTATION") stats.arrest++;
+    if(type === "AMENDE") stats.amende++;
+    if(type === "INTERVENTION") stats.inter++;
+
+    // Sauvegarde Stats
+    localStorage.setItem('st_total', stats.total);
+    localStorage.setItem('st_arrest', stats.arrest);
+    localStorage.setItem('st_amende', stats.amende);
+    localStorage.setItem('st_inter', stats.inter);
+    
+    majStats();
 
     let color = 3447003;
-    if (type === "ARRESTATION") color = 15548997;
-    if (type === "AMENDE") color = 5763719;
+    if(type === "ARRESTATION") color = 15548997;
+    if(type === "AMENDE") color = 5763719;
 
-    // Incrémenter la stat locale
-    incrementStat(type);
+    const description = `**Sujet :** ${titre}\n**Officier :** ${currentUser.name}\n\n${content}`;
+    envoyerWebhook(WEBHOOK_PV, `📄 RAPPORT : ${type}`, color, description);
+    
+    alert("Rapport envoyé !");
+    document.getElementById("pv-titre").value = "";
+    document.getElementById("pv-content").value = "";
+}
 
-    fetch(WEBHOOK_PV, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+function majStats() {
+    if(document.getElementById("stat-total")) {
+        document.getElementById("stat-total").innerText = stats.total;
+        document.getElementById("stat-arrest").innerText = stats.arrest;
+        document.getElementById("stat-amende").innerText = stats.amende;
+        document.getElementById("stat-inter").innerText = stats.inter;
+    }
+}
+
+function envoyerWebhook(url, titre, color, description = "") {
+    if (!currentUser) return;
+    const desc = description || `**Agent :** ${currentUser.name}\n**Heure :** ${new Date().toLocaleTimeString()}`;
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             embeds: [{
-                title: `📄 RAPPORT: ${type}`,
-                description: `**Sujet:** ${titre}\n**Officier:** ${currentUser.name}\n\n${content}`,
+                title: titre,
+                description: desc,
                 color: color,
                 thumbnail: { url: currentUser.avatar },
                 timestamp: new Date().toISOString()
             }]
         })
-    }).then(() => {
-        alert("Rapport envoyé et Stats mises à jour !");
-        document.getElementById("pv-titre").value = "";
-        document.getElementById("pv-content").value = "";
-    });
+    }).catch(err => console.error(err));
 }
