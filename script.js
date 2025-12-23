@@ -4,12 +4,13 @@
 
 // 👇 COLLE ICI LE BLOC "firebaseConfig" DONNÉ PAR FIREBASE 👇
 const firebaseConfig = {
-    apiKey: "AIzaSy...",
-    authDomain: "mdt-police.firebaseapp.com",
-    projectId: "mdt-police",
-    storageBucket: "mdt-police.appspot.com",
-    messagingSenderId: "...",
-    appId: "..."
+    apiKey: "AIzaSyDtFen2Y4hDrUCJ2liJRW2RCeSpqDCFqvo",
+  authDomain: "mdtpj-77770.firebaseapp.com",
+  projectId: "mdtpj-77770",
+  storageBucket: "mdtpj-77770.firebasestorage.app",
+  messagingSenderId: "680483447000",
+  appId: "1:680483447000:web:606be70a09a0ce1c3d77ad",
+  measurementId: "G-5M253L4EVJ"
 };
 // 👆 FIN DU COLLAGE 👆
 
@@ -18,14 +19,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // TES INFOS DISCORD (Comme avant)
-const CLIENT_ID = "TON_CLIENT_ID_DISCORD"; 
-const GUILD_ID = "TON_ID_SERVEUR_DISCORD"; 
-const REDIRECT_URI = "TON_LIEN_NETLIFY"; 
-const ALLOWED_ROLES = ["ID_ROLE_1", "ID_ROLE_2"];
+const CLIENT_ID = "1452733483922358363"; 
+const GUILD_ID = "1453095674638766161"; 
+const REDIRECT_URI = "https://mdtpjpn.vercel.app"; 
+const ALLOWED_ROLES = ["1453098124342984727"];
 
 // WEBHOOKS
-const WEBHOOK_PDS = "TON_WEBHOOK_PDS";
-const WEBHOOK_PV = "TON_WEBHOOK_PV";
+const WEBHOOK_PDS = "https://discord.com/api/webhooks/1453106174269456424/JqbDXXfYJWeFH9yTB7JEUgSRdkmr5DjZNIxiLb_PItwanTmJY9gJuhLs0s1ntm15qI9e";
+const WEBHOOK_PV = "https://discord.com/api/webhooks/1453106369765838850/g53oZ0v0hVE_gtcZ_UA6Lbm1JSXVP8QUqpvZEo4431gOeEqAhopvcbX74TrbRKmjjAM2";
 
 // =========================================================
 
@@ -257,3 +258,4 @@ function changerPage(id) {
     document.getElementById('nav-' + id).classList.add('active');
 }
 function logout() { localStorage.removeItem("mdt_user_session"); window.location.href = REDIRECT_URI; }
+
