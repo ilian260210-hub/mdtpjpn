@@ -244,7 +244,7 @@ input, textarea { user-select: text; font-family: 'Inter', sans-serif; }
 }
 
 /* =========================================
-   7. TABLEAU PERSONNEL (COMPACT STYLE RÉTRO)
+   7. TABLEAU PERSONNEL (COMPACT & CENTRÉ)
    ========================================= */
 .table-container {
     overflow-x: auto;
@@ -252,30 +252,29 @@ input, textarea { user-select: text; font-family: 'Inter', sans-serif; }
 
 .modern-table {
     width: 100%;
-    border-collapse: collapse; /* Colle les bordures */
+    border-collapse: collapse;
     background: white;
 }
 
 .modern-table th {
-    text-align: left;
-    /* PADDING RÉDUIT (avant: 20px 30px) */
-    padding: 12px 16px;
-    background: #f1f5f9; /* Gris un peu plus foncé */
+    /* CENTRAGE DES TITRES */
+    text-align: center; 
+    padding: 12px 10px;
+    background: #f1f5f9;
     color: var(--text-muted);
     font-weight: 700;
-    /* POLICE PLUS PETITE */
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--border); /* Bordure plus marquée sous les titres */
+    border-bottom: 2px solid var(--border);
 }
 
 .modern-table td {
-    /* PADDING RÉDUIT POUR DES LIGNES PLUS FINES (avant: 18px 30px) */
-    padding: 10px 16px;
+    /* CENTRAGE DU CONTENU */
+    text-align: center;
+    padding: 8px 10px; /* Padding compact */
     border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    /* POLICE PLUS PETITE */
+    vertical-align: middle; /* Centre verticalement */
     font-size: 13px;
     color: var(--text-dark);
     font-weight: 500;
@@ -285,28 +284,30 @@ input, textarea { user-select: text; font-family: 'Inter', sans-serif; }
     background: #f8fafc;
 }
 
-/* Dernier élément sans bordure */
 .modern-table tr:last-child td {
     border-bottom: none;
 }
 
-/* Avatar plus petit */
+/* Avatar centré */
 .agent-cell-avatar {
-    width: 32px; /* Avant: 40px */
-    height: 32px; /* Avant: 40px */
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid var(--border);
+    display: block;
+    margin: 0 auto; /* Force le centrage de l'image */
 }
 
-/* Badge de statut plus compact */
+/* Badge de statut centré */
 .status-badge-table {
     display: inline-flex;
     align-items: center;
+    justify-content: center; /* Centrage du texte dans le badge */
     gap: 5px;
-    padding: 2px 8px; /* Plus petit */
+    padding: 2px 10px;
     border-radius: 10px;
-    font-size: 11px; /* Plus petit */
+    font-size: 11px;
     font-weight: 700;
 }
 .st-on { background: #dcfce7; color: #166534; }
@@ -355,6 +356,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
 @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } }
+
 
 
 
