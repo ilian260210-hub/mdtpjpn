@@ -38,7 +38,7 @@
 
             <ul class="menu-list">
                 <li onclick="changerPage('accueil')" id="nav-accueil" class="active">
-                    <i class="fas fa-chart-pie"></i> Accueil
+                    <i class="fas fa-chart-pie"></i> Tableau de bord
                 </li>
                 <li onclick="changerPage('service')" id="nav-service">
                     <i class="fas fa-user-clock"></i> Gestion Service
@@ -50,7 +50,7 @@
                     <i class="fas fa-graduation-cap"></i> Examens
                 </li>
                 <li onclick="changerPage('personnel')" id="nav-personnel">
-                    <i class="fas fa-users"></i> Annuaire
+                    <i class="fas fa-users"></i> Effectifs
                 </li>
                 <li onclick="logout()" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
@@ -88,7 +88,7 @@
                 </div>
                 <div class="form-panel">
                     <h3>ℹ️ Notes de Service</h3>
-                    <p style="color: #4b5563; line-height: 1.6;">Bienvenue sur la version V2 du MDT. Le système est optimisé pour un usage rapide. Merci de vérifier vos fins de service.</p>
+                    <p style="color: #4b5563; line-height: 1.6;">Bienvenue. Les statistiques ont été réinitialisées pour la nouvelle session.</p>
                 </div>
             </div>
 
@@ -146,11 +146,20 @@
 
             <div id="page-personnel" class="page">
                 <div class="form-panel">
-                    <h3>Annuaire des Agents</h3>
-                    <div style="margin-top: 20px; display: flex; align-items: center; gap: 10px; color: #047857; background: #ecfdf5; padding: 10px; border-radius: 8px;">
-                        <div style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
-                        <span>Liste synchronisée avec le serveur central.</span>
-                    </div>
+                    <h3><i class="fas fa-users"></i> État des Effectifs</h3>
+                    <p style="margin-bottom: 20px; font-size: 13px; color: #6b7280;">Liste des agents enregistrés.</p>
+                    
+                    <table class="effectif-table">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>Grade</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="effectif-list">
+                            </tbody>
+                    </table>
                 </div>
             </div>
 
