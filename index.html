@@ -13,6 +13,20 @@
 </head>
 <body>
 
+<div id="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Logo_DCPJ.svg/1200px-Logo_DCPJ.svg.png" alt="Logo PJ" class="pj-logo">
+            </div>
+            <h1>Police Judiciaire</h1>
+            <p>Portail d'authentification sécurisé</p>
+            <button onclick="loginWithDiscord()" class="btn-discord">
+                <i class="fab fa-discord"></i> Connexion via Discord
+            </button>
+        </div>
+    </div>
+
+    
     <div id="modal-overlay" class="hidden">
         <div class="modal-box">
             <div class="modal-header">
@@ -30,19 +44,6 @@
                 </div>
             </div>
             <div class="modal-footer" id="modal-footer-actions"></div>
-        </div>
-    </div>
-
-    <div id="login-screen">
-        <div class="login-card">
-            <div class="login-header">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Logo_DCPJ.svg/1200px-Logo_DCPJ.svg.png" alt="Logo PJ" class="pj-logo">
-            </div>
-            <h1>Police Judiciaire</h1>
-            <p>Portail d'authentification sécurisé</p>
-            <button onclick="loginWithDiscord()" class="btn-discord">
-                <i class="fab fa-discord"></i> Connexion via Discord
-            </button>
         </div>
     </div>
 
@@ -194,3 +195,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
