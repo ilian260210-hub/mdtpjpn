@@ -4,7 +4,7 @@
 
 const CLIENT_ID = "1452733483922358363";      
 const GUILD_ID = "1453095674638766161";     
-const REDIRECT_URI = "mdtpjpn.vercel.app"; // Ex: https://monsite.netlify.app (pas de slash à la fin)
+const REDIRECT_URI = "https://mdtpjpn.vercel.app"; // Ex: https://monsite.netlify.app (pas de slash à la fin)
 
 const ALLOWED_ROLES = [
     "1453098124342984727"
@@ -132,3 +132,4 @@ function envoyerPV() {
     });
 
 }
+
