@@ -71,8 +71,8 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Police Judiciaire TERMINAL</h2><span>Version 5.2</span></div>
-                <div class="network-status"><span class="dot-pulse"></span> En Maintenance</div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 5.3 • Final</span></div>
+                <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
             <div id="page-accueil" class="page active">
@@ -90,25 +90,27 @@
 
             <div id="page-service" class="page">
                 <div class="service-center-wrapper">
-                    <div class="service-header-text">
-                        <h2>Gestion de Service</h2>
-                        <p>Sélectionnez une action pour mettre à jour votre statut.</p>
-                        <div class="current-status-pill">
-                            ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span>
-                        </div>
-                    </div>
-                    
-                    <div class="service-actions-cards">
-                        <div class="action-card start-card" onclick="toggleServiceButton('prise')">
-                            <div class="icon-circle"><i class="fas fa-play"></i></div>
-                            <h3>Prise de Service</h3>
-                            <p>Commencer ma patrouille</p>
+                    <div class="service-box">
+                        <div class="service-header-text">
+                            <h2>Gestion de Service</h2>
+                            <p>Sélectionnez une action pour mettre à jour votre statut.</p>
+                            <div class="current-status-pill">
+                                ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span>
+                            </div>
                         </div>
                         
-                        <div class="action-card end-card" onclick="toggleServiceButton('fin')">
-                            <div class="icon-circle"><i class="fas fa-stop"></i></div>
-                            <h3>Fin de Service</h3>
-                            <p>Terminer et rentrer</p>
+                        <div class="service-actions-cards">
+                            <div class="action-card start-card" onclick="toggleServiceButton('prise')">
+                                <div class="icon-circle"><i class="fas fa-play"></i></div>
+                                <h3>Prise de Service</h3>
+                                <p>Commencer ma patrouille</p>
+                            </div>
+                            
+                            <div class="action-card end-card" onclick="toggleServiceButton('fin')">
+                                <div class="icon-circle"><i class="fas fa-stop"></i></div>
+                                <h3>Fin de Service</h3>
+                                <p>Terminer et rentrer</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,16 +144,10 @@
             <div id="page-messagerie" class="page">
                 <div class="chat-wrapper">
                     <div class="chat-top-bar">
-                        <div class="chat-info">
-                            <i class="fas fa-hashtag"></i>
-                            <span>général-police</span>
-                        </div>
+                        <div class="chat-info"><i class="fas fa-hashtag"></i><span>général-police</span></div>
                         <div class="chat-status"><span class="dot-online"></span> En ligne</div>
                     </div>
-                    
-                    <div id="chat-box" class="chat-area">
-                        </div>
-                    
+                    <div id="chat-box" class="chat-area"></div>
                     <div class="chat-input-zone">
                         <div class="input-pill">
                             <input type="text" id="mail-input" placeholder="Envoyer un message...">
@@ -162,7 +158,7 @@
             </div>
 
             <div id="page-concours" class="page">
-                <div class="cards-grid">
+                <div class="cards-grid center-grid">
                     <div class="card-item">
                         <i class="fas fa-user-secret icon-bg"></i>
                         <h3>Concours OPJ</h3>
@@ -190,4 +186,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
