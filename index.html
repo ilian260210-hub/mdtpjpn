@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Police - Interface Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-container">
+            <div class="logos">
+                <div class="logo-item"><i class="fas fa-shield-alt"></i><span>Police</span></div>
+                <div class="logo-badge">MDT</div>
+                <div class="logo-item"><i class="fas fa-balance-scale"></i><span>Justice</span></div>
+            </div>
+            
+            <h1>Terminal Sécurisé</h1>
+            <p class="sub-text">Veuillez vous identifier pour accéder au réseau.</p>
+
+            <div class="alert-info">
+                <i class="fas fa-lock"></i>
+                <span>Accès réservé au personnel autorisé. Toute tentative d'intrusion sera signalée.</span>
+            </div>
+
+            <button onclick="loginWithDiscord()" class="btn-discord">
+                <i class="fab fa-discord"></i> Connexion via Discord
+            </button>
+            <p id="error-message" class="error-text" style="display:none;">⛔ Erreur d'autorisation</p>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="hidden">
+        
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <img id="user-avatar" src="" alt="Profil">
+                <div class="user-details">
+                    <h3 id="user-name">Chargement...</h3>
+                    <span class="user-role">En Service</span>
+                </div>
+            </div>
+
+            <ul class="nav-links">
+                <li onclick="showPage('accueil')" class="active" id="btn-accueil">
+                    <i class="fas fa-chart-pie"></i> Tableau de bord
+                </li>
+                <li onclick="showPage('rapports')" id="btn-rapports">
+                    <i class="fas fa-file-contract"></i> Rapports
+                </li>
+                <li onclick="showPage('personnel')" id="btn-personnel">
+                    <i class="fas fa-users"></i> Effectifs
+                </li>
+                <li onclick="logout()" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            
+            <header class="top-header">
+                <h2><i class="fas fa-network-wired"></i> Intranet LSPD</h2>
+                <div class="status-indicator">🟢 Système en ligne</div>
+            </header>
+
+            <div id="accueil" class="page active">
+                <div class="stats-row">
+                    <div class="stat-card c-blue">
+                        <div class="icon"><i class="fas fa-clipboard-list"></i></div>
+                        <div class="info"><h3>4</h3><p>Rapports</p></div>
+                    </div>
+                    <div class="stat-card c-red">
+                        <div class="icon"><i class="fas fa-handcuffs"></i></div>
+                        <div class="info"><h3>2</h3><p>Arrestations</p></div>
+                    </div>
+                    <div class="stat-card c-orange">
+                        <div class="icon"><i class="fas fa-car-crash"></i></div>
+                        <div class="info"><h3>2</h3><p>Interventions</p></div>
+                    </div>
+                    <div class="stat-card c-green">
+                        <div class="icon"><i class="fas fa-receipt"></i></div>
+                        <div class="info"><h3>1</h3><p>Amendes</p></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-clock"></i> Dernières Activités</h3>
+                    <table class="table">
+                        <thead>
+                            <tr><th>ID</th><th>Date</th><th>Type</th><th>Agent</th><th>Statut</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>#042</td><td>Aujourd'hui</td><td>Arrestation</td><td>Vous</td><td><span class="tag red">Clôturé</span></td></tr>
+                            <tr><td>#041</td><td>Hier</td><td>Amende</td><td>L. Martin</td><td><span class="tag green">Payé</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="rapports" class="page">
+                <div class="panel">
+                    <h3><i class="fas fa-pen"></i> Rédiger un Rapport</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Sujet du rapport</label>
+                            <input type="text" id="pv-titre" placeholder="Ex: Vol de véhicule...">
+                        </div>
+                        <div class="form-group">
+                            <label>Catégorie</label>
+                            <select id="pv-type">
+                                <option value="INFO">Information</option>
+                                <option value="ARRESTATION">Arrestation</option>
+                                <option value="AMENDE">Amende / PV</option>
+                                <option value="INTERVENTION">Intervention</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Détails des faits</label>
+                        <textarea id="pv-content" rows="8" placeholder="Expliquez la situation..."></textarea>
+                    </div>
+                    <button class="btn-primary" onclick="envoyerPV()">Envoyer le rapport</button>
+                </div>
+            </div>
+
+            <div id="personnel" class="page">
+                <div class="panel">
+                    <h3><i class="fas fa-user-clock"></i> Prise de Service</h3>
+                    <p>Gérez votre statut de service pour la comptabilité.</p>
+                    <div class="buttons-row">
+                        <button class="btn-service start" onclick="envoyerPDS('prise')">✅ Prise de Service</button>
+                        <button class="btn-service end" onclick="envoyerPDS('fin')">🛑 Fin de Service</button>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 20px;">
+                    <h3>Annuaire</h3>
+                    <div class="agents-list">
+                        <div class="agent-item">
+                            <div class="dot online"></div>
+                            <span>Commandant Shepard</span>
+                        </div>
+                        <div class="agent-item">
+                            <div class="dot offline"></div>
+                            <span>Lieutenant Anderson</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
