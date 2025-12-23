@@ -32,7 +32,6 @@ input, textarea { user-select: text; font-family: 'Inter', sans-serif; }
 .hidden { display: none !important; }
 
 /* Sidebar */
-/* Sidebar */
 .sidebar { 
     width: 280px; 
     min-width: 280px; 
@@ -256,3 +255,4 @@ input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--bo
 @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes fadeUp { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } }
+
