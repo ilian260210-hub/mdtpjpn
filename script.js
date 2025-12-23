@@ -39,10 +39,10 @@ let enService = false;
 let isAdmin = false;
 
 window.onload = () => {
-    const localUser = localStorage.getItem("mdt_user_session");
+    const localUser = localStorage.getItem("mdt_session_v4");
     if (localUser) {
         currentUser = JSON.parse(localUser);
-        if(currentUser.admin) isAdmin = true;
+        if(currentUser.isAdmin) isAdmin = true;
         lancerInterface();
     } else {
         const fragment = new URLSearchParams(window.location.hash.slice(1));
@@ -66,17 +66,15 @@ async function verifierUtilisateurDiscord(token) {
         const member = await guildRes.json();
 
         if (member.roles.some(r => ALLOWED_ROLES.includes(r))) {
-            
-            // Vérification Admin
             isAdmin = member.roles.some(r => ADMIN_ROLES.includes(r));
-
+            
             currentUser = { 
                 id: user.id,
                 name: member.nick || user.global_name, 
                 avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
-                admin: isAdmin
+                isAdmin: isAdmin
             };
-            localStorage.setItem("mdt_user_session", JSON.stringify(currentUser));
+            localStorage.setItem("mdt_session_v4", JSON.stringify(currentUser));
             
             db.collection("users").doc(currentUser.id).set({
                 name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date()
@@ -98,202 +96,153 @@ function lancerInterface() {
 
     ecouterRapports();
     ecouterEffectifs();
-    ecouterMails(); // Lancer la messagerie
+    ecouterMails();
     verifierMonStatut();
 }
 
-// --- MESSAGERIE INTRANET ---
+// --- BOUTON SERVICE UNIQUE ---
+function verifierMonStatut() {
+    db.collection("users").doc(currentUser.id).get().then((doc) => {
+        if (doc.exists && doc.data().enService) {
+            enService = true;
+            updateUIService(true);
+        }
+    });
+}
+
+function toggleServiceAction() {
+    // Si on est en service, on passe hors service, et inversement
+    enService = !enService;
+    updateUIService(enService);
+    
+    // Update DB
+    db.collection("users").doc(currentUser.id).update({ enService: enService });
+
+    // Webhook
+    const msg = enService ? "🟢 PRISE DE SERVICE" : "🔴 FIN DE SERVICE";
+    const color = enService ? 3069299 : 15158332;
+    envoyerWebhook(WEBHOOK_PDS, msg, color, `**Agent:** ${currentUser.name}\n**Action:** ${msg}`);
+}
+
+function updateUIService(isOn) {
+    const btn = document.getElementById("btn-service-toggle");
+    const icon = document.getElementById("service-btn-icon");
+    const text = document.getElementById("service-btn-text");
+    const statusTxt = document.getElementById("txt-status-big");
+    const headerStatus = document.getElementById("header-status");
+
+    if (isOn) {
+        // Mode EN SERVICE (Bouton devient Rouge pour dire 'Stop')
+        btn.className = "btn-service-morph on";
+        icon.className = "fas fa-stop";
+        text.innerText = "FIN DE SERVICE";
+        statusTxt.innerText = "EN SERVICE"; statusTxt.style.color = "#10b981";
+        headerStatus.className = "status-dot-text online"; headerStatus.innerText = "En Service";
+    } else {
+        // Mode HORS SERVICE (Bouton devient Vert pour dire 'Start')
+        btn.className = "btn-service-morph off";
+        icon.className = "fas fa-power-off";
+        text.innerText = "PRENDRE MON SERVICE";
+        statusTxt.innerText = "HORS SERVICE"; statusTxt.style.color = "#ef4444";
+        headerStatus.className = "status-dot-text offline"; headerStatus.innerText = "Hors Service";
+    }
+}
+
+// --- MESSAGERIE ---
 function ecouterMails() {
     db.collection("mails").orderBy("date", "asc").limitToLast(50)
     .onSnapshot((snapshot) => {
-        const chatBox = document.getElementById("chat-box");
-        chatBox.innerHTML = "";
-        
+        const box = document.getElementById("chat-box");
+        box.innerHTML = "";
         snapshot.forEach(doc => {
             const msg = doc.data();
             const isMe = msg.authorId === currentUser.id;
-            const bubbleClass = isMe ? "msg-mine" : "msg-other";
-            
-            chatBox.innerHTML += `
-                <div class="msg-bubble ${bubbleClass}">
-                    <span class="msg-info">${msg.authorName} • ${new Date(msg.date.toDate()).toLocaleTimeString()}</span>
-                    ${msg.content}
-                </div>
-            `;
+            const bubble = isMe ? "msg-mine" : "msg-other";
+            box.innerHTML += `<div class="msg-bubble ${bubble}"><span class="msg-meta">${msg.authorName}</span>${msg.content}</div>`;
         });
-        chatBox.scrollTop = chatBox.scrollHeight; // Scroll auto en bas
+        box.scrollTop = box.scrollHeight;
     });
 }
-
 function envoyerMail() {
     const input = document.getElementById("mail-input");
-    const text = input.value;
-    if(!text) return;
-
-    db.collection("mails").add({
-        content: text,
-        authorName: currentUser.name,
-        authorId: currentUser.id,
-        date: new Date()
-    });
+    if(!input.value) return;
+    db.collection("mails").add({ content: input.value, authorName: currentUser.name, authorId: currentUser.id, date: new Date() });
     input.value = "";
 }
 
-// --- RAPPORTS & ADMIN ---
+// --- RAPPORTS & EFFECTIFS ---
 function ecouterRapports() {
-    db.collection("reports").orderBy("date", "desc").limit(30)
-    .onSnapshot((snapshot) => {
-        let stats = { total: 0, arrest: 0, pvi: 0, plainte: 0 };
-        let htmlList = "";
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const id = doc.id;
-            stats.total++;
-            if(data.type === "ARRESTATION") stats.arrest++;
-            if(data.type === "PVI") stats.pvi++;
-            if(data.type === "PLAINTE") stats.plainte++;
-
-            // Échapper les apostrophes pour le onclick
-            const safeTitle = data.titre.replace(/'/g, "\\'"); 
+    db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
+        let st = {t:0, a:0, p:0, pl:0}; let html="";
+        s.forEach(d => {
+            const da = d.data(); st.t++;
+            if(da.type==="ARRESTATION") st.a++; if(da.type==="PVI") st.p++; if(da.type==="PLAINTE") st.pl++;
             
-            htmlList += `
-                <div class="report-mini-item" onclick="ouvrirModalRapport('${id}')">
-                    <div><b>${data.type}</b> - ${data.titre}</div>
-                    <div style="font-size:12px; color:#999;">${new Date(data.date.toDate()).toLocaleDateString()}</div>
-                </div>
-            `;
+            let tagC = "info"; 
+            if(da.type==="ARRESTATION") tagC="arrest"; if(da.type==="PVI") tagC="pvi"; if(da.type==="PLAINTE") tagC="plainte"; if(da.type==="AMENDE") tagC="amende";
+            
+            html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
+                        <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
+                        <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
+                     </div>`;
         });
-
-        document.getElementById("stat-total").innerText = stats.total;
-        document.getElementById("stat-arrest").innerText = stats.arrest;
-        document.getElementById("stat-pvi").innerText = stats.pvi;
-        document.getElementById("stat-plainte").innerText = stats.plainte;
-        document.getElementById("live-reports-list").innerHTML = htmlList;
+        document.getElementById("stat-total").innerText = st.t; document.getElementById("stat-arrest").innerText = st.a;
+        document.getElementById("stat-pvi").innerText = st.p; document.getElementById("stat-plainte").innerText = st.pl;
+        document.getElementById("live-reports-list").innerHTML = html;
     });
 }
 
-async function ouvrirModalRapport(id) {
-    const doc = await db.collection("reports").doc(id).get();
-    if(!doc.exists) return;
-    const data = doc.data();
+function ecouterEffectifs() {
+    db.collection("users").onSnapshot((s) => {
+        let h = "";
+        s.forEach(d => {
+            const a = d.data();
+            const col = a.enService ? "#10b981" : "#ef4444"; const txt = a.enService ? "En Service" : "Hors Service";
+            h += `<tr><td><img src="${a.avatar}"></td><td><b>${a.name}</b></td><td>${a.lastLogin?new Date(a.lastLogin.toDate()).toLocaleDateString():'-'}</td><td><span class="dot" style="background:${col}"></span> ${txt}</td></tr>`;
+        });
+        document.getElementById("effectif-list").innerHTML = h;
+    });
+}
 
+// --- MODAL & ENVOI ---
+async function ouvrirModal(id) {
+    const d = await db.collection("reports").doc(id).get();
+    if(!d.exists) return;
+    const data = d.data();
+    
     document.getElementById("modal-title").innerText = data.titre;
     document.getElementById("modal-type").innerText = data.type;
     document.getElementById("modal-author").innerText = data.officer;
     document.getElementById("modal-date").innerText = new Date(data.date.toDate()).toLocaleString();
     document.getElementById("modal-content").innerText = data.content;
-
-    // PROTECTION ADMIN : Le bouton supprimer n'apparaît que si isAdmin est true
-    const footer = document.getElementById("modal-footer-actions");
-    footer.innerHTML = ""; 
-    if(isAdmin) {
-        footer.innerHTML = `<button onclick="supprimerRapport('${id}')" class="btn-delete"><i class="fas fa-trash"></i> Supprimer (Admin)</button>`;
-    }
-
+    
+    const ft = document.getElementById("modal-footer-actions"); ft.innerHTML="";
+    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" style="background:#ef4444;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;">Supprimer (Admin)</button>`;
+    
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
-
 function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
+function delReport(id) { if(confirm("Supprimer ?")) db.collection("reports").doc(id).delete().then(()=>fermerModal()); }
 
-function supprimerRapport(id) {
-    if(confirm("Confirmer la suppression ?")) {
-        db.collection("reports").doc(id).delete().then(() => { fermerModal(); });
-    }
-}
-
-// --- EFFECTIFS (V3 Style) ---
-function ecouterEffectifs() {
-    db.collection("users").onSnapshot((snapshot) => {
-        let html = "";
-        snapshot.forEach(doc => {
-            const agent = doc.data();
-            const color = agent.enService ? "green" : "red";
-            const text = agent.enService ? "En Service" : "Hors Service";
-            
-            html += `
-                <tr>
-                    <td><img src="${agent.avatar}"></td>
-                    <td><b>${agent.name}</b></td>
-                    <td>${agent.lastLogin ? new Date(agent.lastLogin.toDate()).toLocaleDateString() : '-'}</td>
-                    <td><span class="dot" style="background:${color}"></span> ${text}</td>
-                </tr>
-            `;
-        });
-        document.getElementById("effectif-list").innerHTML = html;
-    });
-}
-
-// --- SERVICE (BOUTONS) ---
-function verifierMonStatut() {
-    db.collection("users").doc(currentUser.id).get().then((doc) => {
-        if (doc.exists && doc.data().enService) {
-            enService = true;
-            updateUIStatus(true);
-        }
-    });
-}
-
-function toggleServiceButton(action) {
-    if(action === 'prise') enService = true;
-    else enService = false;
-
-    updateUIStatus(enService);
-    
-    db.collection("users").doc(currentUser.id).update({ enService: enService });
-
-    const msg = enService ? "🟢 PRISE DE SERVICE" : "🔴 FIN DE SERVICE";
-    const color = enService ? 3069299 : 15158332;
-    envoyerWebhook(WEBHOOK_PDS, msg, color);
-}
-
-function updateUIStatus(isOn) {
-    const txt = document.getElementById("txt-status");
-    const header = document.getElementById("header-status");
-    if(isOn) {
-        txt.innerText = "EN SERVICE"; txt.style.color = "green";
-        header.className = "status-badge online"; header.innerText = "En Service";
-    } else {
-        txt.innerText = "HORS SERVICE"; txt.style.color = "red";
-        header.className = "status-badge offline"; header.innerText = "Hors Service";
-    }
-}
-
-// Fonction Envoi Rapport
 function envoyerRapport() {
-    const titre = document.getElementById("pv-titre").value;
-    const type = document.getElementById("pv-type").value;
-    const content = document.getElementById("pv-content").value;
-    if (!titre || !content) return alert("Remplissez tout !");
-
-    db.collection("reports").add({
-        titre: titre, type: type, content: content,
-        officer: currentUser.name, officerId: currentUser.id, date: new Date()
-    });
-
-    let color = 3447003; 
-    if(type === "ARRESTATION") color = 15548997;
+    const t=document.getElementById("pv-titre").value; const ty=document.getElementById("pv-type").value; const c=document.getElementById("pv-content").value;
+    if(!t||!c) return alert("Remplissez tout");
+    db.collection("reports").add({ titre:t, type:ty, content:c, officer:currentUser.name, officerId:currentUser.id, date:new Date() });
     
-    const desc = `**Officier:** ${currentUser.name}\n**Titre:** ${titre}\n\n${content}`;
-    envoyerWebhook(WEBHOOK_PV, `📄 RAPPORT : ${type}`, color, desc);
-    
-    alert("Envoyé !");
-    document.getElementById("pv-titre").value = "";
-    document.getElementById("pv-content").value = "";
+    let col=3447003; if(ty==="ARRESTATION") col=15548997; if(ty==="PLAINTE") col=9662683;
+    envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
+    alert("Envoyé");
+    document.getElementById("pv-titre").value=""; document.getElementById("pv-content").value="";
 }
 
-function envoyerWebhook(url, titre, color, description) {
-    fetch(url, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ embeds: [{ title: titre, description: description, color: color, thumbnail: { url: currentUser.avatar } }] })
-    }).catch(e => console.error(e));
+function envoyerWebhook(url, title, color, desc) {
+    fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({embeds:[{title:title, description:desc, color:color, thumbnail:{url:currentUser.avatar}}]}) });
 }
 
-// Navigation
 function changerPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.menu-list li').forEach(li => li.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
-    document.getElementById('nav-' + id).classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-menu li').forEach(l=>l.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    document.getElementById('nav-'+id).classList.add('active');
 }
-function logout() { localStorage.removeItem("mdt_user_session"); window.location.href = REDIRECT_URI; }
+function logout() { localStorage.removeItem("mdt_session_v4"); window.location.href=REDIRECT_URI; }
