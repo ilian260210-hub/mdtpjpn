@@ -39,61 +39,68 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* =========================================
-   2. NOTIFICATIONS (TOASTS) & LOADER
+   2. LOGIN SCREEN (TAILLE AJUSTÉE)
    ========================================= */
-#toast-container {
-    position: fixed; bottom: 30px; right: 30px;
-    display: flex; flex-direction: column; gap: 15px; z-index: 10000;
+#login-screen { 
+    position: fixed; 
+    inset: 0; 
+    z-index: 9999; 
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
 }
 
-.toast {
-    background: white; padding: 16px 24px; border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left: 5px solid var(--primary);
-    display: flex; align-items: center; gap: 12px; min-width: 300px;
-    animation: slideInRight 0.4s var(--ease), fadeOut 0.4s var(--ease) 3.6s forwards;
-    font-weight: 600; font-size: 14px;
-}
-.toast i { font-size: 18px; }
-.toast.success { border-color: var(--success); color: #064e3b; } .toast.success i { color: var(--success); }
-.toast.error { border-color: var(--danger); color: #7f1d1d; } .toast.error i { color: var(--danger); }
-.toast.info { border-color: var(--primary); color: #1e3a8a; } .toast.info i { color: var(--primary); }
-
-/* --- LOADER (Centrage & Taille Ajustés) --- */
-#loading-overlay {
-    position: fixed; inset: 0; background: var(--bg-body); z-index: 20000;
-    display: flex; justify-content: center; align-items: center;
-    transition: opacity 0.5s ease;
+.login-card { 
+    background: white; 
+    padding: 50px; /* Un peu moins de padding pour resserrer */
+    width: 420px; 
+    border-radius: 24px; 
+    text-align: center; 
+    box-shadow: 0 30px 60px -15px rgba(0,0,0,0.35); 
+    animation: popIn 0.6s var(--ease); 
 }
 
-.loader-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Centre tout horizontalement */
-    justify-content: center;
-    text-align: center;
-}
-
-/* LOGO PLUS GROS ET BIEN CENTRÉ */
-.loader-logo { 
-    width: 200px; /* Agrandissement (avant 100px) */
+/* ICI : On réduit un peu la taille (130px au lieu de 150px) */
+.login-logo img { 
+    width: 130px; 
     height: auto;
-    margin-bottom: 40px; 
-    animation: pulse 2s infinite; 
-    display: block; /* Sécurité pour le centrage */
+    margin-bottom: 25px; 
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.15)); 
 }
 
-.spinner {
-    width: 50px; height: 50px; /* Un peu plus gros aussi */
-    border: 4px solid #e2e8f0; border-top: 4px solid var(--primary);
-    border-radius: 50%; margin-bottom: 20px; 
-    animation: spin 1s linear infinite;
+.login-card h1 {
+    margin-bottom: 10px;
+    font-size: 26px; 
 }
 
-.loader-content p {
-    font-size: 16px;
-    font-weight: 600;
+.login-card p {
+    margin-bottom: 30px;
+    font-size: 15px; 
     color: var(--text-muted);
-    letter-spacing: 0.5px;
+}
+
+.btn-discord { 
+    width: 100%; 
+    background: #5865F2; 
+    color: white; 
+    padding: 16px; 
+    border: none; 
+    border-radius: 12px; 
+    font-weight: 700; 
+    font-size: 15px; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 12px; 
+    transition: all 0.2s var(--ease);
+}
+
+.btn-discord:hover { 
+    background: #4752c4; 
+    transform: translateY(-3px); 
+    box-shadow: 0 10px 20px -5px rgba(88, 101, 242, 0.4);
 }
 /* =========================================
    3. LAYOUT DASHBOARD
@@ -347,5 +354,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
 
 
