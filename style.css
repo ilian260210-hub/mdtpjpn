@@ -39,77 +39,61 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* =========================================
-   2. LOGIN SCREEN (VERSION AÉRÉE)
+   2. NOTIFICATIONS (TOASTS) & LOADER
    ========================================= */
-#login-screen { 
-    position: fixed; 
-    inset: 0; 
-    z-index: 9999; 
-    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
+#toast-container {
+    position: fixed; bottom: 30px; right: 30px;
+    display: flex; flex-direction: column; gap: 15px; z-index: 10000;
 }
 
-.login-card { 
-    background: white; 
-    /* Augmentation du padding interne de 50px à 60px pour plus d'espace autour du contenu */
-    padding: 60px; 
-    /* Augmentation légère de la largeur pour compenser le padding et aérer horizontalement */
-    width: 450px; 
-    border-radius: 24px; /* Coins un peu plus arrondis pour la modernité */
-    text-align: center; 
-    box-shadow: 0 30px 60px -15px rgba(0,0,0,0.35); /* Ombre un peu plus marquée et douce */
-    animation: popIn 0.6s var(--ease); 
+.toast {
+    background: white; padding: 16px 24px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left: 5px solid var(--primary);
+    display: flex; align-items: center; gap: 12px; min-width: 300px;
+    animation: slideInRight 0.4s var(--ease), fadeOut 0.4s var(--ease) 3.6s forwards;
+    font-weight: 600; font-size: 14px;
+}
+.toast i { font-size: 18px; }
+.toast.success { border-color: var(--success); color: #064e3b; } .toast.success i { color: var(--success); }
+.toast.error { border-color: var(--danger); color: #7f1d1d; } .toast.error i { color: var(--danger); }
+.toast.info { border-color: var(--primary); color: #1e3a8a; } .toast.info i { color: var(--primary); }
+
+/* --- LOADER (Centrage & Taille Ajustés) --- */
+#loading-overlay {
+    position: fixed; inset: 0; background: var(--bg-body); z-index: 20000;
+    display: flex; justify-content: center; align-items: center;
+    transition: opacity 0.5s ease;
 }
 
-/* MODIFICATION TAILLE & MARGE LOGO LOGIN */
-.login-logo img { 
-    width: 150px; 
-    /* Augmentation de la marge sous le logo de 25px à 35px */
-    margin-bottom: 35px; 
-    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.15)); /* Ombre portée sous le logo plus douce */
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centre tout horizontalement */
+    justify-content: center;
+    text-align: center;
 }
 
-.login-card h1 {
-    /* Augmentation de la marge sous le titre de 10px à 15px */
-    margin-bottom: 15px;
-    font-size: 28px; /* Titre légèrement plus grand */
+/* LOGO PLUS GROS ET BIEN CENTRÉ */
+.loader-logo { 
+    width: 200px; /* Agrandissement (avant 100px) */
+    height: auto;
+    margin-bottom: 40px; 
+    animation: pulse 2s infinite; 
+    display: block; /* Sécurité pour le centrage */
 }
 
-.login-card p {
-    /* Augmentation de la marge sous le sous-titre de 30px à 40px */
-    margin-bottom: 40px;
-    font-size: 16px; /* Sous-titre légèrement plus grand */
+.spinner {
+    width: 50px; height: 50px; /* Un peu plus gros aussi */
+    border: 4px solid #e2e8f0; border-top: 4px solid var(--primary);
+    border-radius: 50%; margin-bottom: 20px; 
+    animation: spin 1s linear infinite;
 }
 
-.btn-discord { 
-    width: 100%; 
-    background: #5865F2; 
-    color: white; 
-    /* Augmentation du padding vertical du bouton de 15px à 18px pour le rendre plus imposant */
-    padding: 18px 20px; 
-    border: none; 
-    border-radius: 12px; 
-    font-weight: 700; 
-    font-size: 16px; /* Texte du bouton légèrement plus grand */
-    cursor: pointer; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    gap: 12px; 
-    transition: all 0.2s var(--ease);
-}
-
-.btn-discord:hover { 
-    background: #4752c4; 
-    transform: translateY(-3px); 
-    box-shadow: 0 10px 20px -5px rgba(88, 101, 242, 0.4); /* Ajout d'une ombre au survol */
-}
-
-.btn-discord:active {
-    transform: translateY(-1px); /* Effet de clic */
-    box-shadow: 0 5px 10px -5px rgba(88, 101, 242, 0.4);
+.loader-content p {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
 }
 /* =========================================
    3. LAYOUT DASHBOARD
@@ -363,4 +347,5 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
 
