@@ -132,16 +132,15 @@ function lancerInterface() {
     ecouterMails();
     verifierMonStatut();
 
-    // Cacher le loader après 1.5 seconde (pour l'effet wow)
+    // MODIFICATION ICI : Chargement plus long (3 secondes d'attente + 1s de fondu = 4s total)
     setTimeout(() => {
-        loader.style.opacity = "0";
+        loader.style.opacity = "0"; // Commence à disparaître lentement
         setTimeout(() => {
-            loader.classList.add("hidden");
+            loader.classList.add("hidden"); // Se cache complètement
             document.getElementById("dashboard-screen").classList.remove("hidden");
-        }, 500);
-    }, 1500);
+        }, 1000); // Attend 1 seconde que le fondu soit fini
+    }, 3000); // Attend 3 secondes avant de commencer le fondu
 }
-
 async function resetAllReports() {
     if(!confirm("⚠️ ATTENTION : Suppression totale des rapports ?")) return;
 
@@ -296,3 +295,4 @@ function changerPage(id) {
     document.getElementById('nav-'+id).classList.add('active');
 }
 function logout() { localStorage.removeItem("mdt_final_v6"); window.location.href=REDIRECT_URI; }
+
