@@ -40,7 +40,7 @@ let isAdmin = false;
 let currentReportId = null;
 
 window.onload = () => {
-    const localUser = localStorage.getItem("mdt_final_v7");
+    const localUser = localStorage.getItem("mdt_final_v7.3");
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = fragment.get("access_token");
 
@@ -90,7 +90,7 @@ async function verifierUtilisateurDiscord(token) {
                 id: user.id, name: member.nick || user.global_name, 
                 avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`, isAdmin: isAdmin 
             };
-            localStorage.setItem("mdt_final_v7", JSON.stringify(currentUser));
+            localStorage.setItem("mdt_final_v7.3", JSON.stringify(currentUser));
             db.collection("users").doc(currentUser.id).set({ name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date() }, { merge: true });
             lancerInterface();
         } else {
@@ -103,7 +103,6 @@ function lancerInterface() {
     const loader = document.getElementById("loading-overlay");
     if(loader) loader.classList.remove("hidden");
     document.getElementById("login-screen").classList.add("hidden");
-    
     if(currentUser) {
         document.getElementById("user-name").innerText = currentUser.name;
         document.getElementById("user-avatar").src = currentUser.avatar;
@@ -111,98 +110,45 @@ function lancerInterface() {
     window.history.replaceState({}, document.title, "/");
     if(isAdmin) document.getElementById("nav-admin").classList.remove("hidden");
 
-    try {
-        ecouterRapports(); ecouterEffectifs(); ecouterMails(); verifierMonStatut();
-    } catch(e) { console.error(e); }
+    try { ecouterRapports(); ecouterEffectifs(); ecouterMails(); verifierMonStatut(); } catch(e) {}
 
     setTimeout(() => {
         if(loader) {
             loader.style.opacity = "0";
-            setTimeout(() => {
-                loader.classList.add("hidden");
-                document.getElementById("dashboard-screen").classList.remove("hidden");
-            }, 800);
+            setTimeout(() => { loader.classList.add("hidden"); document.getElementById("dashboard-screen").classList.remove("hidden"); }, 800);
         }
     }, 3000);
 }
 
-// --- GESTION DES RAPPORTS (CORRIGÉE) ---
-// ... (LE DÉBUT AVEC LES CONFIGS RESTE LE MÊME) ...
-
-// --- FONCTION DE DEBUG POUR LES RAPPORTS ---
+// --- RAPPORTS ---
 function traiterRapport() {
-    console.log("Tentative d'envoi du rapport...");
+    // VERIF SERVICE
+    if (!enService) { showToast("Veuillez prendre votre service (Bouton Vert).", "error"); return; }
 
-    // 1. Récupération des valeurs
     const t = document.getElementById("pv-titre").value;
     const ty = document.getElementById("pv-type").value;
     const c = document.getElementById("pv-content").value;
     
-    // 2. Vérification champs vides
-    if(!t || !c) { 
-        showToast("Erreur : Titre ou contenu vide !", "error"); 
-        return; 
-    }
+    if(!t || !c) { showToast("Remplissez tous les champs.", "error"); return; }
+    
+    const data = { titre:t, type:ty, content:c, officer:currentUser.name, officerId:currentUser.id, date:new Date() };
 
-    // 3. Vérification de l'utilisateur (Sécurité)
-    if(!currentUser || !currentUser.id) {
-        showToast("Erreur : Utilisateur non connecté.", "error");
-        return;
-    }
-
-    // 4. Préparation des données
-    const reportData = {
-        titre: t, 
-        type: ty, 
-        content: c,
-        officer: currentUser.name, 
-        officerId: currentUser.id, 
-        date: new Date()
-    };
-
-    console.log("Données prêtes :", reportData);
-
-    // 5. Envoi vers Firebase
-    // Si c'est une modification
     if(currentReportId) {
-        db.collection("reports").doc(currentReportId).update(reportData)
-        .then(() => {
-            showToast("Rapport modifié avec succès !", "success");
-            annulerEdition();
-        })
-        .catch((error) => {
-            console.error("Erreur modif : ", error);
-            showToast("Erreur lors de la modification.", "error");
+        db.collection("reports").doc(currentReportId).update(data).then(() => {
+            showToast("Rapport modifié.", "success"); annulerEdition();
         });
-    } 
-    // Si c'est une création (Nouveau rapport)
-    else {
-        db.collection("reports").add(reportData)
-        .then(() => {
-            console.log("Rapport envoyé à la DB !");
-            
-            // Webhook Discord
-            let col = 3447003; // Bleu par défaut
-            if(ty === "ARRESTATION") col = 15548997; // Rouge
-            if(ty === "AMENDE") col = 2140013; // Vert
-            
+    } else {
+        db.collection("reports").add(data).then(() => {
+            let col = 3447003; 
+            if(ty==="ARRESTATION") col=15548997; if(ty==="AMENDE") col=2140013; if(ty==="PLAINTE") col=9662683;
             envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
-            
-            showToast("Rapport transmis avec succès !", "success");
-            
-            // Vider le formulaire
-            document.getElementById("pv-titre").value = ""; 
-            document.getElementById("pv-content").value = "";
-        })
-        .catch((error) => {
-            console.error("Erreur envoi : ", error);
-            showToast("Erreur technique : " + error.message, "error");
+            showToast("Rapport transmis.", "success");
+            document.getElementById("pv-titre").value=""; document.getElementById("pv-content").value="";
         });
     }
 }
 
-// ... (LE RESTE DU FICHIER RESTE IDENTIQUE) ...
-// --- ADMIN : MODIFIER / SUPPRIMER ---
+// --- ADMIN ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
@@ -217,30 +163,25 @@ async function ouvrirModal(id) {
     const btnDelete = document.getElementById("btn-delete-report");
 
     if(isAdmin) {
-        btnEdit.classList.remove("hidden");
-        btnDelete.classList.remove("hidden");
+        btnEdit.classList.remove("hidden"); btnDelete.classList.remove("hidden");
         btnEdit.onclick = () => chargerEdition(id, data);
         btnDelete.onclick = () => supprimerRapport(id);
     } else {
-        btnEdit.classList.add("hidden");
-        btnDelete.classList.add("hidden");
+        btnEdit.classList.add("hidden"); btnDelete.classList.add("hidden");
     }
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
 
 function chargerEdition(id, data) {
-    if (!enService) { showToast("Mettez-vous en service pour modifier.", "error"); return; }
+    if (!enService) { showToast("Service requis pour modifier.", "error"); return; }
     currentReportId = id;
     document.getElementById("pv-titre").value = data.titre;
     document.getElementById("pv-type").value = data.type;
     document.getElementById("pv-content").value = data.content;
-    
     document.getElementById("form-title").innerHTML = '<i class="fas fa-edit"></i> Modifier le Dossier';
-    document.getElementById("btn-submit-report").innerText = "Sauvegarder les modifications";
+    document.getElementById("btn-submit-report").innerText = "Sauvegarder";
     document.getElementById("btn-cancel-edit").classList.remove("hidden");
-    
-    fermerModal();
-    changerPage('rapports');
+    fermerModal(); changerPage('rapports');
 }
 
 function annulerEdition() {
@@ -253,24 +194,18 @@ function annulerEdition() {
 }
 
 function supprimerRapport(id) {
-    if(confirm("Supprimer ce rapport définitivement ?")) {
-        db.collection("reports").doc(id).delete().then(() => {
-            showToast("Rapport supprimé.", "success");
-            fermerModal();
-        });
+    if(confirm("Confirmer suppression ?")) {
+        db.collection("reports").doc(id).delete().then(() => { showToast("Supprimé.", "success"); fermerModal(); });
     }
 }
 
-// --- AUTRES FONCTIONS ---
 function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
 
 async function resetAllReports() {
-    if(!confirm("SUPPRIMER TOUS LES RAPPORTS ? Irréversible.")) return;
+    if(!confirm("TOUT SUPPRIMER ?")) return;
     const s = await db.collection("reports").get();
-    const b = db.batch();
-    s.docs.forEach(d => b.delete(d.ref));
-    await b.commit();
-    showToast("Base de données vidée.", "success");
+    const b = db.batch(); s.docs.forEach(d => b.delete(d.ref));
+    await b.commit(); showToast("Base vidée.", "success");
 }
 
 function ecouterRapports() {
@@ -318,6 +253,12 @@ function ecouterMails() {
     });
 }
 
+function envoyerMail() {
+    const input = document.getElementById("mail-input"); if(!input.value.trim()) return;
+    db.collection("mails").add({ content: input.value, authorName: currentUser.name, authorId: currentUser.id, authorAvatar: currentUser.avatar, date: new Date() });
+    input.value = "";
+}
+
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((d) => {
         if (d.exists && d.data().enService) { enService = true; updateUIStatus(true); }
@@ -339,12 +280,6 @@ function updateUIStatus(isOn) {
     else { txt.innerText = "HORS SERVICE"; txt.style.color = "#ef4444"; header.className = "status-pill offline"; header.innerText = "Hors Service"; }
 }
 
-function envoyerMail() {
-    const input = document.getElementById("mail-input"); if(!input.value.trim()) return;
-    db.collection("mails").add({ content: input.value, authorName: currentUser.name, authorId: currentUser.id, authorAvatar: currentUser.avatar, date: new Date() });
-    input.value = "";
-}
-
 function envoyerWebhook(url, title, color, desc) {
     fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({embeds:[{title:title, description:desc, color:color, thumbnail:{url:currentUser.avatar}}]}) });
 }
@@ -360,6 +295,5 @@ function logout() {
     const loader = document.getElementById("loading-overlay");
     const txt = document.getElementById("loader-text");
     if(loader && txt) { txt.innerText = "Déconnexion en cours..."; loader.classList.remove("hidden"); loader.style.opacity = "1"; }
-    setTimeout(() => { localStorage.removeItem("mdt_final_v7"); window.location.href = REDIRECT_URI; }, 2000);
+    setTimeout(() => { localStorage.removeItem("mdt_final_v7.3"); window.location.href = REDIRECT_URI; }, 2000);
 }
-
