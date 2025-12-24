@@ -72,6 +72,7 @@
                 <li onclick="changerPage('service')" id="nav-service"><i class="fas fa-stopwatch"></i> Service</li>
                 <li onclick="changerPage('rapports')" id="nav-rapports"><i class="fas fa-folder-open"></i> Rapports</li>
                 <li onclick="changerPage('messagerie')" id="nav-messagerie"><i class="fas fa-comment-alt"></i> Messagerie</li>
+                <li onclick="changerPage('specialites')" id="nav-specialites"><i class="fas fa-fingerprint"></i> Spécialités</li>
                 <li onclick="changerPage('concours')" id="nav-concours"><i class="fas fa-graduation-cap"></i> Concours</li>
                 <li onclick="changerPage('personnel')" id="nav-personnel"><i class="fas fa-users"></i> Effectifs</li>
                 
@@ -86,16 +87,16 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 6.4 • Black Edition</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.0 • Final</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
             <div id="page-accueil" class="page active">
                 <div class="stats-row">
                     <div class="stat-card"><div class="icon-box blue"><i class="fas fa-file-alt"></i></div><div class="stat-info"><h3>Rapports</h3><span id="stat-total">0</span></div></div>
-                    <div class="stat-card red"><div class="icon-box red"><i class="fas fa-handcuffs"></i></div><div class="stat-info"><h3>Arrestations</h3><span id="stat-arrest">0</span></div></div>
                     <div class="stat-card orange"><div class="icon-box orange"><i class="fas fa-shield-alt"></i></div><div class="stat-info"><h3>PVI</h3><span id="stat-pvi">0</span></div></div>
                     <div class="stat-card purple"><div class="icon-box purple"><i class="fas fa-gavel"></i></div><div class="stat-info"><h3>Plaintes</h3><span id="stat-plainte">0</span></div></div>
+                    <div class="stat-card green"><div class="icon-box green"><i class="fas fa-ticket-alt"></i></div><div class="stat-info"><h3>Contraventions</h3><span id="stat-amende">0</span></div></div>
                 </div>
                 <div class="panel">
                     <div class="panel-head"><h3><i class="fas fa-history"></i> Fil d'activité</h3></div>
@@ -115,7 +116,7 @@
                             <div class="action-card start-card" onclick="toggleServiceButton('prise')">
                                 <div class="icon-circle"><i class="fas fa-play"></i></div>
                                 <h3>Prise de Service</h3>
-                                <p>Commencer ma patrouille</p>
+                                <p>Débuter ma patrouille</p>
                             </div>
                             <div class="action-card end-card" onclick="toggleServiceButton('fin')">
                                 <div class="icon-circle"><i class="fas fa-stop"></i></div>
@@ -139,7 +140,7 @@
                             <select id="pv-type">
                                 <option value="INFO">Information</option>
                                 <option value="ARRESTATION">Arrestation</option>
-                                <option value="AMENDE">Amende</option>
+                                <option value="AMENDE">Contravention / Amende</option>
                                 <option value="PVI">PVI</option>
                                 <option value="PLAINTE">Plainte</option>
                             </select>
@@ -164,6 +165,29 @@
                             <input type="text" id="mail-input" placeholder="Envoyer un message...">
                             <button onclick="envoyerMail()" class="btn-chat-send"><i class="fas fa-paper-plane"></i></button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-specialites" class="page">
+                <div class="concours-wrapper">
+                    <div class="card-item">
+                        <div class="icon-bg"><i class="fas fa-dna"></i></div>
+                        <h3>PTS</h3>
+                        <p>Police Technique & Scientifique</p>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
+                    </div>
+                    <div class="card-item">
+                        <div class="icon-bg"><i class="fas fa-mask"></i></div>
+                        <h3>BRI</h3>
+                        <p>Brigade de Recherche et d'Intervention</p>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
+                    </div>
+                    <div class="card-item">
+                        <div class="icon-bg"><i class="fas fa-cannabis"></i></div>
+                        <h3>STUPS</h3>
+                        <p>Brigade des Stupéfiants</p>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
                     </div>
                 </div>
             </div>
