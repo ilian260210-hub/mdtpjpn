@@ -49,7 +49,6 @@ window.onload = () => {
         try {
             currentUser = JSON.parse(localUser);
             if (!currentUser.id) throw new Error("Session invalide");
-            // Vérification Admin au rechargement
             if(currentUser.isAdmin) {
                 isAdmin = true;
                 document.getElementById("nav-admin").classList.remove("hidden");
@@ -60,6 +59,25 @@ window.onload = () => {
         }
     }
 };
+
+// --- SYSTÈME DE NOTIFICATION (TOAST) ---
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = 'fa-info-circle';
+    if(type === 'success') icon = 'fa-check-circle';
+    if(type === 'error') icon = 'fa-exclamation-circle';
+
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Supprimer après 4 secondes
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
 
 function loginWithDiscord() {
     const scope = encodeURIComponent("identify guilds.members.read");
@@ -98,47 +116,50 @@ async function verifierUtilisateurDiscord(token) {
 }
 
 function lancerInterface() {
+    // Afficher le loader
+    const loader = document.getElementById("loading-overlay");
+    loader.classList.remove("hidden");
+
     document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("dashboard-screen").classList.remove("hidden");
     document.getElementById("user-name").innerText = currentUser.name;
     document.getElementById("user-avatar").src = currentUser.avatar;
     window.history.replaceState({}, document.title, "/");
 
-    // Afficher onglet Admin
     if(isAdmin) document.getElementById("nav-admin").classList.remove("hidden");
 
     ecouterRapports();
     ecouterEffectifs();
     ecouterMails();
     verifierMonStatut();
+
+    // Cacher le loader après 1.5 seconde (pour l'effet wow)
+    setTimeout(() => {
+        loader.style.opacity = "0";
+        setTimeout(() => {
+            loader.classList.add("hidden");
+            document.getElementById("dashboard-screen").classList.remove("hidden");
+        }, 500);
+    }, 1500);
 }
 
-// --- FONCTION ADMIN RESET ---
 async function resetAllReports() {
-    if(!confirm("⚠️ ATTENTION ⚠️\nVous êtes sur le point de SUPPRIMER TOUS LES RAPPORTS.\nCette action est irréversible.\n\nConfirmer la remise à zéro ?")) return;
+    if(!confirm("⚠️ ATTENTION : Suppression totale des rapports ?")) return;
 
     try {
         const snapshot = await db.collection("reports").get();
         if(snapshot.empty) {
-            alert("La base de données est déjà vide.");
+            showToast("Base de données déjà vide.", "info");
             return;
         }
-
         const batch = db.batch();
-        snapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
         await batch.commit();
-        alert("✅ Succès : Tous les rapports ont été supprimés.");
-        // Pas besoin de reload, l'écouteur en temps réel mettra à jour les stats
+        showToast("Tous les rapports ont été supprimés.", "success");
     } catch (error) {
-        console.error(error);
-        alert("Erreur lors de la suppression : " + error);
+        showToast("Erreur : " + error, "error");
     }
 }
 
-// --- MESSAGERIE ---
 function ecouterMails() {
     db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
         const box = document.getElementById("chat-box"); box.innerHTML = "";
@@ -146,7 +167,6 @@ function ecouterMails() {
             const m = d.data(); 
             const isMe = m.authorId === currentUser.id;
             const rowClass = isMe ? "msg-row me" : "msg-row other";
-            
             box.innerHTML += `
                 <div class="${rowClass}">
                     ${!isMe ? `<img src="${m.authorAvatar}" class="msg-avatar">` : ''}
@@ -164,18 +184,13 @@ function ecouterMails() {
 function envoyerMail() {
     const input = document.getElementById("mail-input");
     if(!input.value.trim()) return;
-    
     db.collection("mails").add({ 
-        content: input.value, 
-        authorName: currentUser.name, 
-        authorId: currentUser.id,
-        authorAvatar: currentUser.avatar,
-        date: new Date() 
+        content: input.value, authorName: currentUser.name, 
+        authorId: currentUser.id, authorAvatar: currentUser.avatar, date: new Date() 
     });
     input.value = "";
 }
 
-// --- BOUTONS SERVICE ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
@@ -194,6 +209,9 @@ function toggleServiceButton(action) {
 
     const msg = enService ? "🟢 PRISE DE SERVICE" : "🔴 FIN DE SERVICE";
     const color = enService ? 3069299 : 15158332;
+    const typeToast = enService ? "success" : "info";
+    
+    showToast(msg, typeToast);
     envoyerWebhook(WEBHOOK_PDS, msg, color, `**Agent:** ${currentUser.name}\n**Action:** ${msg}`);
 }
 
@@ -209,17 +227,13 @@ function updateUIStatus(isOn) {
     }
 }
 
-// --- RAPPORTS ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
         let st = {t:0, a:0, p:0, pl:0}; let html="";
         s.forEach(d => {
             const da = d.data(); st.t++;
             if(da.type==="ARRESTATION") st.a++; if(da.type==="PVI") st.p++; if(da.type==="PLAINTE") st.pl++;
-            
-            let tagC = "info"; 
-            if(da.type==="ARRESTATION") tagC="arrest";
-            
+            let tagC = "info"; if(da.type==="ARRESTATION") tagC="arrest";
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
                         <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
                         <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
@@ -231,59 +245,43 @@ function ecouterRapports() {
     });
 }
 
-// --- EFFECTIFS ---
 function ecouterEffectifs() {
     db.collection("users").onSnapshot((s) => {
-        let html = "";
+        let h = "";
         s.forEach(d => {
             const a = d.data();
             const statusClass = a.enService ? "st-on" : "st-off";
             const statusText = a.enService ? "En Service" : "Hors Service";
             const lastSeen = a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleDateString() : '-';
-
-            html += `
-                <tr>
-                    <td><img src="${a.avatar}" class="agent-cell-avatar"></td>
-                    <td><strong>${a.name}</strong></td>
-                    <td style="color:#64748b; font-size:13px;">${lastSeen}</td>
-                    <td><span class="status-badge-table ${statusClass}"><div class="dot-status"></div> ${statusText}</span></td>
-                </tr>
-            `;
+            h += `<tr><td><img src="${a.avatar}" class="agent-cell-avatar"></td><td><strong>${a.name}</strong></td><td style="color:#64748b; font-size:13px;">${lastSeen}</td><td><span class="status-badge-table ${statusClass}"><div class="dot-status"></div> ${statusText}</span></td></tr>`;
         });
-        document.getElementById("effectif-list").innerHTML = html;
+        document.getElementById("effectif-list").innerHTML = h;
     });
 }
 
-// --- MODAL ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
     const data = d.data();
-    
     document.getElementById("modal-title").innerText = data.titre;
     document.getElementById("modal-type").innerText = data.type;
     document.getElementById("modal-author").innerText = data.officer;
     document.getElementById("modal-date").innerText = new Date(data.date.toDate()).toLocaleString();
     document.getElementById("modal-content").innerText = data.content;
-    
-    // Le bouton supprimer n'apparait que dans le modal si admin ? 
-    // Non, le bouton reset global est dans l'onglet Admin. 
-    // Ici on peut laisser un bouton supprimer unitaire si besoin.
-    const ft = document.getElementById("modal-footer-actions"); ft.innerHTML="";
-    
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
 function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
 
-// --- ENVOI ---
 function envoyerRapport() {
     const t=document.getElementById("pv-titre").value; const ty=document.getElementById("pv-type").value; const c=document.getElementById("pv-content").value;
-    if(!t||!c) return alert("Remplissez tout");
+    if(!t||!c) { showToast("Veuillez remplir tous les champs.", "error"); return; }
+    
     db.collection("reports").add({ titre:t, type:ty, content:c, officer:currentUser.name, officerId:currentUser.id, date:new Date() });
     
     let col=3447003; if(ty==="ARRESTATION") col=15548997; if(ty==="PLAINTE") col=9662683;
     envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
-    alert("Envoyé");
+    
+    showToast("Rapport transmis avec succès.", "success");
     document.getElementById("pv-titre").value=""; document.getElementById("pv-content").value="";
 }
 
