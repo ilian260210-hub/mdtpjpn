@@ -39,7 +39,7 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* =========================================
-   2. LOGIN SCREEN (CENTRÉ PARFAIT)
+   2. LOGIN SCREEN (LOGO PLUS GRAND)
    ========================================= */
 #login-screen { 
     position: fixed; inset: 0; z-index: 9999; 
@@ -51,7 +51,9 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
     text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); 
     animation: popIn 0.6s var(--ease); 
 }
-.login-logo img { width: 130px; margin-bottom: 25px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1)); }
+/* MODIFICATION TAILLE LOGO LOGIN ICI */
+.login-logo img { width: 150px; margin-bottom: 25px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1)); }
+
 .btn-discord { 
     width: 100%; background: #5865F2; color: white; padding: 15px; 
     border: none; border-radius: 10px; font-weight: 700; font-size: 15px; 
@@ -66,12 +68,12 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 #dashboard-screen { display: flex; width: 100%; height: 100%; }
 .hidden { display: none !important; }
 
-/* --- SIDEBAR (Espacement corrigé) --- */
+/* --- SIDEBAR --- */
 .sidebar { 
     width: 280px; min-width: 280px; background: white; 
     border-right: 1px solid var(--border); 
     display: flex; flex-direction: column; padding: 25px; z-index: 10; 
-    justify-content: flex-start; /* Empile vers le haut */
+    justify-content: flex-start; 
 }
 
 .profile-card { 
@@ -100,7 +102,6 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 .admin-link { color: #ef4444 !important; } 
 .admin-link:hover { background: #fef2f2 !important; color: #dc2626 !important; }
 
-/* Bouton Déconnexion collé en bas */
 .sidebar-footer { margin-top: auto; }
 .btn-logout { 
     width: 100%; padding: 12px; background: #fef2f2; color: #ef4444; 
@@ -109,7 +110,7 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 }
 .btn-logout:hover { background: #fee2e2; transform: scale(0.98); }
 
-/* --- MAIN CONTENT (Cadrage contenu) --- */
+/* --- MAIN CONTENT --- */
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { 
     height: 70px; min-height: 70px; background: white; 
@@ -125,24 +126,22 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 .dot-pulse { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
 
 .page { 
-    display: none; padding: 40px; /* Espace autour du contenu */
+    display: none; padding: 40px; 
     overflow-y: auto; height: calc(100vh - 70px); 
     animation: fadeUp 0.4s var(--ease); 
 }
 .page.active { display: block; }
 
-/* Max-width pour éviter que ça s'étire trop sur grand écran */
 .stats-row, .panel, .form-content, .service-box, .chat-wrapper, .cards-grid {
     max-width: 1200px; margin-left: auto; margin-right: auto;
 }
 
 /* =========================================
-   4. SERVICE (Recadré & Centré)
+   4. SERVICE
    ========================================= */
 .service-center-wrapper { 
     display: flex; flex-direction: column; align-items: center; justify-content: center; 
-    height: 85%; /* Remonté un peu pour centrage optique */
-    text-align: center; 
+    height: 85%; text-align: center; 
 }
 .service-box { width: 100%; max-width: 650px; }
 
@@ -178,7 +177,7 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 .admin-danger-box { border: 2px dashed #fee2e2; background: #fffcfc; padding: 40px; border-radius: 20px; }
 
 /* =========================================
-   5. MESSAGERIE (Clean)
+   5. MESSAGERIE
    ========================================= */
 .chat-wrapper { 
     display: flex; flex-direction: column; height: 100%; 
@@ -210,7 +209,7 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 .btn-chat-send:hover { transform: scale(1.1); }
 
 /* =========================================
-   6. CONCOURS & STATS (Centrés)
+   6. CONCOURS & STATS
    ========================================= */
 .concours-wrapper { 
     display: flex; justify-content: center; align-items: center; 
@@ -242,7 +241,7 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 .stat-info span { font-size: 24px; font-weight: 800; display: block; }
 
 /* =========================================
-   7. TABLEAU & LISTES (Compact & Centré)
+   7. TABLEAU & LISTES
    ========================================= */
 .panel { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); }
 .panel-head { padding: 15px 25px; background: #f8fafc; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; }
@@ -271,7 +270,7 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 .dot-status { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
 /* =========================================
-   8. FORMS & MODAL
+   8. FORMS, MODAL & TOASTS
    ========================================= */
 .form-content { padding: 30px; }
 .input-group { margin-bottom: 20px; }
@@ -303,7 +302,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
 .toast.info { border-color: var(--primary); color: #1e3a8a; } .toast.info i { color: var(--primary); }
 
 #loading-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 20000; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
-.loader-logo { width: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
+/* MODIFICATION TAILLE LOGO LOADER ICI */
+.loader-logo { width: 100px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
 .spinner { width: 30px; height: 30px; border: 3px solid #e2e8f0; border-top: 3px solid var(--primary); border-radius: 50%; margin: 0 auto 15px auto; animation: spin 1s linear infinite; }
 
 /* Animations */
