@@ -39,7 +39,7 @@ let enService = false;
 let isAdmin = false;
 
 window.onload = () => {
-    const localUser = localStorage.getItem("mdt_final_session");
+    const localUser = localStorage.getItem("mdt_final_v6");
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = fragment.get("access_token");
 
@@ -49,7 +49,11 @@ window.onload = () => {
         try {
             currentUser = JSON.parse(localUser);
             if (!currentUser.id) throw new Error("Session invalide");
-            if(currentUser.isAdmin) isAdmin = true;
+            // Vérification Admin au rechargement
+            if(currentUser.isAdmin) {
+                isAdmin = true;
+                document.getElementById("nav-admin").classList.remove("hidden");
+            }
             lancerInterface();
         } catch(e) {
             logout();
@@ -73,13 +77,14 @@ async function verifierUtilisateurDiscord(token) {
 
         if (member.roles.some(r => ALLOWED_ROLES.includes(r))) {
             isAdmin = member.roles.some(r => ADMIN_ROLES.includes(r));
+            
             currentUser = { 
                 id: user.id,
                 name: member.nick || user.global_name, 
                 avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
                 isAdmin: isAdmin
             };
-            localStorage.setItem("mdt_final_session", JSON.stringify(currentUser));
+            localStorage.setItem("mdt_final_v6", JSON.stringify(currentUser));
             
             db.collection("users").doc(currentUser.id).set({
                 name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date()
@@ -99,10 +104,38 @@ function lancerInterface() {
     document.getElementById("user-avatar").src = currentUser.avatar;
     window.history.replaceState({}, document.title, "/");
 
+    // Afficher onglet Admin
+    if(isAdmin) document.getElementById("nav-admin").classList.remove("hidden");
+
     ecouterRapports();
     ecouterEffectifs();
     ecouterMails();
     verifierMonStatut();
+}
+
+// --- FONCTION ADMIN RESET ---
+async function resetAllReports() {
+    if(!confirm("⚠️ ATTENTION ⚠️\nVous êtes sur le point de SUPPRIMER TOUS LES RAPPORTS.\nCette action est irréversible.\n\nConfirmer la remise à zéro ?")) return;
+
+    try {
+        const snapshot = await db.collection("reports").get();
+        if(snapshot.empty) {
+            alert("La base de données est déjà vide.");
+            return;
+        }
+
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        alert("✅ Succès : Tous les rapports ont été supprimés.");
+        // Pas besoin de reload, l'écouteur en temps réel mettra à jour les stats
+    } catch (error) {
+        console.error(error);
+        alert("Erreur lors de la suppression : " + error);
+    }
 }
 
 // --- MESSAGERIE ---
@@ -187,7 +220,6 @@ function ecouterRapports() {
             let tagC = "info"; 
             if(da.type==="ARRESTATION") tagC="arrest";
             
-            const safeTitle = da.titre.replace(/'/g, "\\'");
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
                         <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
                         <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
@@ -196,6 +228,29 @@ function ecouterRapports() {
         document.getElementById("stat-total").innerText = st.t; document.getElementById("stat-arrest").innerText = st.a;
         document.getElementById("stat-pvi").innerText = st.p; document.getElementById("stat-plainte").innerText = st.pl;
         document.getElementById("live-reports-list").innerHTML = html;
+    });
+}
+
+// --- EFFECTIFS ---
+function ecouterEffectifs() {
+    db.collection("users").onSnapshot((s) => {
+        let html = "";
+        s.forEach(d => {
+            const a = d.data();
+            const statusClass = a.enService ? "st-on" : "st-off";
+            const statusText = a.enService ? "En Service" : "Hors Service";
+            const lastSeen = a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleDateString() : '-';
+
+            html += `
+                <tr>
+                    <td><img src="${a.avatar}" class="agent-cell-avatar"></td>
+                    <td><strong>${a.name}</strong></td>
+                    <td style="color:#64748b; font-size:13px;">${lastSeen}</td>
+                    <td><span class="status-badge-table ${statusClass}"><div class="dot-status"></div> ${statusText}</span></td>
+                </tr>
+            `;
+        });
+        document.getElementById("effectif-list").innerHTML = html;
     });
 }
 
@@ -211,13 +266,14 @@ async function ouvrirModal(id) {
     document.getElementById("modal-date").innerText = new Date(data.date.toDate()).toLocaleString();
     document.getElementById("modal-content").innerText = data.content;
     
+    // Le bouton supprimer n'apparait que dans le modal si admin ? 
+    // Non, le bouton reset global est dans l'onglet Admin. 
+    // Ici on peut laisser un bouton supprimer unitaire si besoin.
     const ft = document.getElementById("modal-footer-actions"); ft.innerHTML="";
-    if(isAdmin) ft.innerHTML = `<button onclick="delReport('${id}')" style="background:#fee2e2;color:#991b1b;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:700;">Supprimer</button>`;
     
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
 function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
-function delReport(id) { if(confirm("Supprimer ?")) db.collection("reports").doc(id).delete().then(()=>fermerModal()); }
 
 // --- ENVOI ---
 function envoyerRapport() {
@@ -235,52 +291,10 @@ function envoyerWebhook(url, title, color, desc) {
     fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({embeds:[{title:title, description:desc, color:color, thumbnail:{url:currentUser.avatar}}]}) });
 }
 
-// --- EFFECTIFS ---
-// ... (LE DÉBUT DU FICHIER NE CHANGE PAS, GARDE TA CONFIGURATION) ...
-
-// --- EFFECTIFS (TABLEAU DESIGN) ---
-function ecouterEffectifs() {
-    db.collection("users").onSnapshot((snapshot) => {
-        let html = "";
-        snapshot.forEach(doc => {
-            const agent = doc.data();
-            
-            // Définition des styles selon le statut
-            const statusClass = agent.enService ? "st-on" : "st-off";
-            const statusText = agent.enService ? "En Service" : "Hors Service";
-            const lastSeen = agent.lastLogin ? new Date(agent.lastLogin.toDate()).toLocaleDateString() : '-';
-
-            html += `
-                <tr>
-                    <td>
-                        <img src="${agent.avatar}" class="agent-cell-avatar" alt="Avatar">
-                    </td>
-                    <td>
-                        <strong>${agent.name}</strong>
-                    </td>
-                    <td style="color:#64748b; font-size:13px;">
-                        ${lastSeen}
-                    </td>
-                    <td>
-                        <span class="status-badge-table ${statusClass}">
-                            <div class="dot-status"></div> ${statusText}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        });
-        document.getElementById("effectif-list").innerHTML = html;
-    });
-}
-
-// ... (LA FIN DU FICHIER NE CHANGE PAS) ...
-
-// Navigation
 function changerPage(id) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-links li').forEach(l=>l.classList.remove('active'));
     document.getElementById('page-'+id).classList.add('active');
     document.getElementById('nav-'+id).classList.add('active');
 }
-function logout() { localStorage.removeItem("mdt_final_session"); window.location.href=REDIRECT_URI; }
-
+function logout() { localStorage.removeItem("mdt_final_v6"); window.location.href=REDIRECT_URI; }
