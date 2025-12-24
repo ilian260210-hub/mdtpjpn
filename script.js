@@ -115,6 +115,8 @@ async function verifierUtilisateurDiscord(token) {
     } catch (e) { console.error(e); }
 }
 
+// ... (Le début du fichier avec tes configs ne change pas) ...
+
 function lancerInterface() {
     // Afficher le loader
     const loader = document.getElementById("loading-overlay");
@@ -141,6 +143,8 @@ function lancerInterface() {
         }, 1000); // Attend 1 seconde que le fondu soit fini
     }, 3000); // Attend 3 secondes avant de commencer le fondu
 }
+
+// ... (Le reste du fichier ne change pas) ...
 async function resetAllReports() {
     if(!confirm("⚠️ ATTENTION : Suppression totale des rapports ?")) return;
 
@@ -295,4 +299,5 @@ function changerPage(id) {
     document.getElementById('nav-'+id).classList.add('active');
 }
 function logout() { localStorage.removeItem("mdt_final_v6"); window.location.href=REDIRECT_URI; }
+
 
