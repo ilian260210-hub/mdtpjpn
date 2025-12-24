@@ -37,6 +37,7 @@ const WEBHOOK_PV = "https://discord.com/api/webhooks/1453106369765838850/g53oZ0v
 let currentUser = null;
 let enService = false;
 let isAdmin = false;
+let currentReportId = null; // Pour l'édition
 
 window.onload = () => {
     const localUser = localStorage.getItem("mdt_final_premium");
@@ -113,11 +114,9 @@ async function verifierUtilisateurDiscord(token) {
 }
 
 function lancerInterface() {
-    // 1. Afficher le loader
     const loader = document.getElementById("loading-overlay");
     if(loader) loader.classList.remove("hidden");
 
-    // 2. Préparer l'interface
     document.getElementById("login-screen").classList.add("hidden");
     if(currentUser) {
         document.getElementById("user-name").innerText = currentUser.name;
@@ -126,7 +125,6 @@ function lancerInterface() {
     window.history.replaceState({}, document.title, "/");
     if(isAdmin) document.getElementById("nav-admin").classList.remove("hidden");
 
-    // 3. Lancer les écoutes (Firebase)
     try {
         ecouterRapports();
         ecouterEffectifs();
@@ -134,7 +132,6 @@ function lancerInterface() {
         verifierMonStatut();
     } catch(e) { console.error("Erreur init Firebase", e); }
 
-    // 4. Timer pour cacher le loader (4 secondes)
     setTimeout(() => {
         if(loader) {
             loader.style.opacity = "0";
@@ -165,7 +162,7 @@ async function resetAllReports() {
     }
 }
 
-// --- MESSAGERIE ---
+// --- MESSAGERIE (NOM AJOUTÉ) ---
 function ecouterMails() {
     db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
         const box = document.getElementById("chat-box"); box.innerHTML = "";
@@ -173,10 +170,18 @@ function ecouterMails() {
             const m = d.data(); 
             const isMe = m.authorId === currentUser.id;
             const rowClass = isMe ? "msg-row me" : "msg-row other";
+            
+            // Afficher le nom seulement si ce n'est pas moi
+            const nameHtml = !isMe ? `<span class="msg-name">${m.authorName}</span>` : '';
+            const avatarHtml = !isMe ? `<img src="${m.authorAvatar}" class="msg-avatar">` : '';
+
             box.innerHTML += `
                 <div class="${rowClass}">
-                    ${!isMe ? `<img src="${m.authorAvatar}" class="msg-avatar">` : ''}
-                    <div class="msg-bubble">${m.content}</div>
+                    ${avatarHtml}
+                    <div class="msg-content-wrapper">
+                        ${nameHtml}
+                        <div class="msg-bubble">${m.content}</div>
+                    </div>
                 </div>
             `;
         });
@@ -231,7 +236,7 @@ function updateUIStatus(isOn) {
     }
 }
 
-// --- RAPPORTS STATS (MODIFIÉ POUR AMENDE) ---
+// --- RAPPORTS STATS ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
         let st = {t:0, amende:0, p:0, pl:0}; let html="";
@@ -258,7 +263,7 @@ function ecouterRapports() {
     });
 }
 
-// --- EFFECTIFS ---
+// --- EFFECTIFS (CORRIGÉ) ---
 function ecouterEffectifs() {
     db.collection("users").onSnapshot((s) => {
         let h = "";
@@ -267,37 +272,134 @@ function ecouterEffectifs() {
             const statusClass = a.enService ? "st-on" : "st-off";
             const statusText = a.enService ? "En Service" : "Hors Service";
             const lastSeen = a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleDateString() : '-';
-            h += `<tr><td><img src="${a.avatar}" class="agent-cell-avatar"></td><td><strong>${a.name}</strong></td><td style="color:#64748b; font-size:13px;">${lastSeen}</td><td><span class="status-badge-table ${statusClass}"><div class="dot-status"></div> ${statusText}</span></td></tr>`;
+            // La première cellule contient maintenant l'image ET le nom
+            h += `<tr>
+                    <td><img src="${a.avatar}" class="agent-cell-avatar"> <strong>${a.name}</strong></td>
+                    <td style="color:#64748b; font-size:13px;">${lastSeen}</td>
+                    <td><span class="status-badge-table ${statusClass}"><div class="dot-status"></div> ${statusText}</span></td>
+                  </tr>`;
         });
         document.getElementById("effectif-list").innerHTML = h;
     });
 }
 
-// --- MODAL & ENVOI ---
+// --- MODAL & ÉDITION (ADMIN) ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
     const data = d.data();
+    
     document.getElementById("modal-title").innerText = data.titre;
     document.getElementById("modal-type").innerText = data.type;
     document.getElementById("modal-author").innerText = data.officer;
     document.getElementById("modal-date").innerText = new Date(data.date.toDate()).toLocaleString();
     document.getElementById("modal-content").innerText = data.content;
+    
+    // GESTION DES BOUTONS ADMIN
+    const btnEdit = document.getElementById("btn-edit-report");
+    const btnDelete = document.getElementById("btn-delete-report");
+
+    if(isAdmin) {
+        btnEdit.classList.remove("hidden");
+        btnDelete.classList.remove("hidden");
+        // Assigner les fonctions au clic avec l'ID du rapport
+        btnEdit.onclick = () => chargerEdition(id, data);
+        btnDelete.onclick = () => supprimerRapport(id);
+    } else {
+        btnEdit.classList.add("hidden");
+        btnDelete.classList.add("hidden");
+    }
+
     document.getElementById("modal-overlay").classList.remove("hidden");
 }
 function fermerModal() { document.getElementById("modal-overlay").classList.add("hidden"); }
 
-function envoyerRapport() {
-    const t=document.getElementById("pv-titre").value; const ty=document.getElementById("pv-type").value; const c=document.getElementById("pv-content").value;
-    if(!t||!c) { showToast("Veuillez remplir tous les champs.", "error"); return; }
+// Fonction pour supprimer un rapport (Admin)
+async function supprimerRapport(id) {
+    if(!confirm("Voulez-vous vraiment supprimer ce rapport ?")) return;
+    try {
+        await db.collection("reports").doc(id).delete();
+        showToast("Rapport supprimé.", "success");
+        fermerModal();
+    } catch (error) {
+        showToast("Erreur lors de la suppression.", "error");
+    }
+}
+
+// Fonction pour charger le rapport dans le formulaire d'édition
+function chargerEdition(id, data) {
+    // Vérifier le service
+    if (!enService) {
+        showToast("Vous devez être en service pour modifier un rapport.", "error");
+        return;
+    }
+
+    currentReportId = id; // On sauvegarde l'ID
     
-    db.collection("reports").add({ titre:t, type:ty, content:c, officer:currentUser.name, officerId:currentUser.id, date:new Date() });
+    // Remplir le formulaire
+    document.getElementById("pv-titre").value = data.titre;
+    document.getElementById("pv-type").value = data.type;
+    document.getElementById("pv-content").value = data.content;
     
-    let col=3447003; if(ty==="ARRESTATION") col=15548997; if(ty==="PLAINTE") col=9662683;
-    envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
+    // Changer l'interface du formulaire
+    document.getElementById("form-title").innerHTML = '<i class="fas fa-edit"></i> Modification du Dossier';
+    document.getElementById("btn-submit-report").innerText = "Sauvegarder les modifications";
+    document.getElementById("btn-cancel-edit").classList.remove("hidden");
     
-    showToast("Rapport transmis avec succès.", "success");
-    document.getElementById("pv-titre").value=""; document.getElementById("pv-content").value="";
+    fermerModal();
+    changerPage('rapports');
+}
+
+// Fonction pour annuler l'édition
+function annulerEdition() {
+    currentReportId = null;
+    document.getElementById("pv-titre").value = "";
+    document.getElementById("pv-content").value = "";
+    document.getElementById("form-title").innerHTML = '<i class="fas fa-pen-nib"></i> Nouveau Dossier';
+    document.getElementById("btn-submit-report").innerText = "Transmettre";
+    document.getElementById("btn-cancel-edit").classList.add("hidden");
+}
+
+// Fonction unique pour Créer OU Modifier un rapport
+function traiterRapport() {
+    // VÉRIFICATION DE SERVICE OBLIGATOIRE
+    if (!enService) {
+        showToast("Vous devez être en service pour transmettre un rapport.", "error");
+        return;
+    }
+
+    const t = document.getElementById("pv-titre").value;
+    const ty = document.getElementById("pv-type").value;
+    const c = document.getElementById("pv-content").value;
+    
+    if(!t || !c) { showToast("Veuillez remplir tous les champs.", "error"); return; }
+    
+    const reportData = {
+        titre: t, type: ty, content: c,
+        officer: currentUser.name, officerId: currentUser.id, date: new Date()
+    };
+
+    if(currentReportId) {
+        // MODIFICATION
+        db.collection("reports").doc(currentReportId).update(reportData)
+        .then(() => {
+            showToast("Rapport modifié avec succès.", "success");
+            annulerEdition(); // Reset du formulaire
+        });
+    } else {
+        // CRÉATION
+        db.collection("reports").add(reportData).then(() => {
+            let col = 3447003; 
+            if(ty==="ARRESTATION") col=15548997; 
+            if(ty==="PLAINTE") col=9662683;
+            if(ty==="AMENDE") col=2140013; // Vert
+            
+            envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
+            showToast("Rapport transmis avec succès.", "success");
+            document.getElementById("pv-titre").value=""; 
+            document.getElementById("pv-content").value="";
+        });
+    }
 }
 
 function envoyerWebhook(url, title, color, desc) {
@@ -310,6 +412,20 @@ function changerPage(id) {
     document.getElementById('page-'+id).classList.add('active');
     document.getElementById('nav-'+id).classList.add('active');
 }
-function logout() { localStorage.removeItem("mdt_final_premium"); window.location.href=REDIRECT_URI; }
 
+// --- DÉCONNEXION AVEC ANIMATION ---
+function logout() {
+    const loader = document.getElementById("loading-overlay");
+    const loaderText = document.getElementById("loader-text");
+    
+    if(loader && loaderText) {
+        loaderText.innerText = "Déconnexion en cours...";
+        loader.classList.remove("hidden");
+        loader.style.opacity = "1";
+    }
 
+    setTimeout(() => {
+        localStorage.removeItem("mdt_final_premium");
+        window.location.href = REDIRECT_URI;
+    }, 2000);
+}
