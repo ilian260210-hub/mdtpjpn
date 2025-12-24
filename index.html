@@ -7,7 +7,7 @@
     
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -91,7 +91,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.1 • Ultimate</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.2 • Stable</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
@@ -136,23 +136,26 @@
                 <div class="panel">
                     <div class="panel-head"><h3 id="form-title"><i class="fas fa-pen-nib"></i> Nouveau Dossier</h3></div>
                     <div class="form-content">
-                        <input type="hidden" id="pv-id"> <div class="input-group">
-                            <label>Titre</label><input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
+                        <input type="hidden" id="pv-id">
+                        <div class="input-group">
+                            <label>Titre du rapport</label>
+                            <input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
                         </div>
                         <div class="input-group">
                             <label>Catégorie</label>
                             <select id="pv-type">
                                 <option value="ARRESTATION">Arrestation</option>
                                 <option value="AMENDE">Contravention / Amende</option>
-                                <option value="PVI">PVI</option>
+                                <option value="PVI">PVI (Perquisition)</option>
                                 <option value="PLAINTE">Plainte</option>
                             </select>
                         </div>
                         <div class="input-group full">
-                            <label>Détails</label><textarea id="pv-content" rows="12" placeholder="Saisissez les détails..."></textarea>
+                            <label>Détails et déroulé des faits</label>
+                            <textarea id="pv-content" rows="12" placeholder="Décrivez la situation avec précision..."></textarea>
                         </div>
-                        <button id="btn-submit-report" class="btn-submit" onclick="traiterRapport()">Transmettre</button>
-                        <button id="btn-cancel-edit" class="btn-outline hidden" onclick="annulerEdition()" style="width:100%; margin-top:10px;">Annuler</button>
+                        <button id="btn-submit-report" class="btn-submit" onclick="traiterRapport()">Transmettre le rapport</button>
+                        <button id="btn-cancel-edit" class="btn-outline hidden" onclick="annulerEdition()" style="width:100%; margin-top:15px;">Annuler la modification</button>
                     </div>
                 </div>
             </div>
@@ -179,19 +182,19 @@
                         <div class="icon-bg"><i class="fas fa-dna"></i></div>
                         <h3>PTS</h3>
                         <p>Police Technique & Scientifique</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
+                        <a href="#" class="btn-outline">Voir les dossiers</a>
                     </div>
                     <div class="card-item">
                         <div class="icon-bg"><i class="fas fa-mask"></i></div>
                         <h3>BRI</h3>
                         <p>Brigade de Recherche et d'Intervention</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
+                        <a href="#" class="btn-outline">Voir les dossiers</a>
                     </div>
                     <div class="card-item">
                         <div class="icon-bg"><i class="fas fa-cannabis"></i></div>
                         <h3>STUPS</h3>
                         <p>Brigade des Stupéfiants</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
+                        <a href="#" class="btn-outline">Voir les dossiers</a>
                     </div>
                 </div>
             </div>
@@ -202,13 +205,13 @@
                         <div class="icon-bg"><i class="fas fa-user-secret"></i></div>
                         <h3>Concours OPJ</h3>
                         <p>Officier de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
+                        <a href="#" class="btn-outline">Accéder au dossier</a>
                     </div>
                     <div class="card-item">
                         <div class="icon-bg"><i class="fas fa-user-shield"></i></div>
                         <h3>Concours APJ</h3>
                         <p>Agent de Police Judiciaire</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
+                        <a href="#" class="btn-outline">Accéder au dossier</a>
                     </div>
                 </div>
             </div>
@@ -218,7 +221,7 @@
                     <div class="panel-head"><h3><i class="fas fa-users"></i> État des Effectifs</h3></div>
                     <div class="table-container">
                         <table class="modern-table">
-                            <thead><tr><th style="text-align:left;">Agent</th><th>Dernière activité</th><th>Statut Actuel</th></tr></thead>
+                            <thead><tr><th style="text-align:left; padding-left:30px;">Agent</th><th>Dernière activité</th><th>Statut Actuel</th></tr></thead>
                             <tbody id="effectif-list"></tbody>
                         </table>
                     </div>
