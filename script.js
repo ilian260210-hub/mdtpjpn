@@ -103,6 +103,7 @@ function lancerInterface() {
     const loader = document.getElementById("loading-overlay");
     if(loader) loader.classList.remove("hidden");
     document.getElementById("login-screen").classList.add("hidden");
+    
     if(currentUser) {
         document.getElementById("user-name").innerText = currentUser.name;
         document.getElementById("user-avatar").src = currentUser.avatar;
@@ -110,41 +111,62 @@ function lancerInterface() {
     window.history.replaceState({}, document.title, "/");
     if(isAdmin) document.getElementById("nav-admin").classList.remove("hidden");
 
-    try { ecouterRapports(); ecouterEffectifs(); ecouterMails(); verifierMonStatut(); } catch(e) {}
+    try {
+        ecouterRapports(); ecouterEffectifs(); ecouterMails(); verifierMonStatut();
+    } catch(e) { console.error(e); }
 
     setTimeout(() => {
         if(loader) {
             loader.style.opacity = "0";
-            setTimeout(() => { loader.classList.add("hidden"); document.getElementById("dashboard-screen").classList.remove("hidden"); }, 800);
+            setTimeout(() => {
+                loader.classList.add("hidden");
+                document.getElementById("dashboard-screen").classList.remove("hidden");
+            }, 800);
         }
     }, 3000);
 }
 
-// --- RAPPORTS ---
+// --- RAPPORTS (FONCTIONNEMENT GARANTI) ---
 function traiterRapport() {
-    // VERIF SERVICE
-    if (!enService) { showToast("Veuillez prendre votre service (Bouton Vert).", "error"); return; }
+    // 1. Vérification du service (Sécurité demandée)
+    if (!enService) {
+        showToast("Impossible d'envoyer : Vous êtes Hors Service.", "error");
+        return;
+    }
 
     const t = document.getElementById("pv-titre").value;
     const ty = document.getElementById("pv-type").value;
     const c = document.getElementById("pv-content").value;
     
-    if(!t || !c) { showToast("Remplissez tous les champs.", "error"); return; }
+    // 2. Vérification champs vides
+    if(!t || !c) { 
+        showToast("Veuillez remplir le titre et le contenu.", "error"); 
+        return; 
+    }
     
-    const data = { titre:t, type:ty, content:c, officer:currentUser.name, officerId:currentUser.id, date:new Date() };
+    const reportData = { 
+        titre:t, type:ty, content:c, 
+        officer:currentUser.name, officerId:currentUser.id, date:new Date() 
+    };
 
+    // 3. Envoi ou Modif
     if(currentReportId) {
-        db.collection("reports").doc(currentReportId).update(data).then(() => {
-            showToast("Rapport modifié.", "success"); annulerEdition();
-        });
+        db.collection("reports").doc(currentReportId).update(reportData).then(() => {
+            showToast("Rapport modifié avec succès.", "success");
+            annulerEdition();
+        }).catch(err => showToast("Erreur modif : " + err, "error"));
     } else {
-        db.collection("reports").add(data).then(() => {
-            let col = 3447003; 
-            if(ty==="ARRESTATION") col=15548997; if(ty==="AMENDE") col=2140013; if(ty==="PLAINTE") col=9662683;
+        db.collection("reports").add(reportData).then(() => {
+            let col = 3447003; // Bleu
+            if(ty==="ARRESTATION") col=15548997; // Rouge
+            if(ty==="AMENDE") col=2140013; // Vert
+            if(ty==="PLAINTE") col=9662683; // Violet
+            
             envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
-            showToast("Rapport transmis.", "success");
-            document.getElementById("pv-titre").value=""; document.getElementById("pv-content").value="";
-        });
+            showToast("Rapport envoyé !", "success");
+            document.getElementById("pv-titre").value=""; 
+            document.getElementById("pv-content").value="";
+        }).catch(err => showToast("Erreur envoi : " + err, "error"));
     }
 }
 
@@ -208,13 +230,17 @@ async function resetAllReports() {
     await b.commit(); showToast("Base vidée.", "success");
 }
 
+// --- STATS COLORÉES ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
         let st = {t:0, amende:0, p:0, pl:0}; let html="";
         s.forEach(d => {
             const da = d.data(); st.t++;
             if(da.type==="AMENDE") st.amende++; if(da.type==="PVI") st.p++; if(da.type==="PLAINTE") st.pl++;
-            let tagC="info"; if(da.type==="ARRESTATION") tagC="arrest"; if(da.type==="AMENDE") tagC="amende";
+            let tagC="info"; 
+            if(da.type==="ARRESTATION") tagC="arrest"; 
+            if(da.type==="AMENDE") tagC="amende";
+            
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
                         <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
                         <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
@@ -226,6 +252,7 @@ function ecouterRapports() {
     });
 }
 
+// --- EFFECTIFS (ALIGNÉ) ---
 function ecouterEffectifs() {
     db.collection("users").onSnapshot((s) => {
         let h = "";
