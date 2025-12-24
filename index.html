@@ -36,7 +36,7 @@
                 </div>
             </div>
             <div class="modal-content-scroll">
-                <h2 id="modal-title">Titre</h2>
+                <h2 id="modal-title">Titre du rapport</h2>
                 <div class="modal-meta">
                     <div class="meta-item"><i class="fas fa-user-shield"></i> <span id="modal-author">...</span></div>
                     <div class="meta-item"><i class="far fa-calendar-alt"></i> <span id="modal-date">...</span></div>
@@ -65,7 +65,7 @@
                 <div class="profile-card">
                     <img id="user-avatar" src="" alt="Profil">
                     <div class="profile-info">
-                        <h3 id="user-name">...</h3>
+                        <h3 id="user-name">Chargement...</h3>
                         <div id="header-status" class="status-pill offline">Hors Service</div>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.2 • Stable</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.3 • Ultimate</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
@@ -136,10 +136,8 @@
                 <div class="panel">
                     <div class="panel-head"><h3 id="form-title"><i class="fas fa-pen-nib"></i> Nouveau Dossier</h3></div>
                     <div class="form-content">
-                        <input type="hidden" id="pv-id">
-                        <div class="input-group">
-                            <label>Titre du rapport</label>
-                            <input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
+                        <input type="hidden" id="pv-id"> <div class="input-group">
+                            <label>Titre</label><input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
                         </div>
                         <div class="input-group">
                             <label>Catégorie</label>
@@ -151,11 +149,10 @@
                             </select>
                         </div>
                         <div class="input-group full">
-                            <label>Détails et déroulé des faits</label>
-                            <textarea id="pv-content" rows="12" placeholder="Décrivez la situation avec précision..."></textarea>
+                            <label>Détails</label><textarea id="pv-content" rows="12" placeholder="Saisissez les détails..."></textarea>
                         </div>
-                        <button id="btn-submit-report" class="btn-submit" onclick="traiterRapport()">Transmettre le rapport</button>
-                        <button id="btn-cancel-edit" class="btn-outline hidden" onclick="annulerEdition()" style="width:100%; margin-top:15px;">Annuler la modification</button>
+                        <button id="btn-submit-report" class="btn-submit" onclick="traiterRapport()">Transmettre</button>
+                        <button id="btn-cancel-edit" class="btn-outline hidden" onclick="annulerEdition()" style="width:100%; margin-top:10px;">Annuler la modification</button>
                     </div>
                 </div>
             </div>
