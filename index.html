@@ -14,6 +14,16 @@
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
+    <div id="loading-overlay" class="hidden">
+        <div class="loader-content">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Logo_DCPJ.svg/1200px-Logo_DCPJ.svg.png" alt="Logo" class="loader-logo">
+            <div class="spinner"></div>
+            <p>Connexion sécurisée aux serveurs...</p>
+        </div>
+    </div>
+
     <div id="modal-overlay" class="hidden">
         <div class="modal-box">
             <div class="modal-header">
@@ -75,7 +85,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 6.1 • Stable</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 6.2 • Live Sync</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
@@ -176,7 +186,7 @@
 
             <div id="page-personnel" class="page">
                 <div class="panel">
-                    <div class="panel-head"><h3><i class="fas fa-users"></i> Tableau des Effectifs</h3></div>
+                    <div class="panel-head"><h3><i class="fas fa-users"></i> État des Effectifs</h3></div>
                     <div class="table-container">
                         <table class="modern-table">
                             <thead><tr><th>Agent</th><th>Dernière activité</th><th>Statut Actuel</th></tr></thead>
@@ -190,13 +200,10 @@
                 <div class="service-center-wrapper">
                     <div class="service-box admin-danger-box">
                         <h2 style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> Zone Administration</h2>
-                        <p>Attention, les actions ci-dessous sont irréversibles et affectent toute la base de données.</p>
-                        
+                        <p>Attention, les actions ci-dessous sont irréversibles.</p>
                         <div style="margin-top: 30px;">
                             <button onclick="resetAllReports()" class="btn-big end" style="width: 100%; height: auto;">
-                                <i class="fas fa-trash-alt" style="margin-bottom:10px;"></i>
-                                SUPPRIMER TOUS LES RAPPORTS<br>
-                                <span style="font-size:12px; font-weight:400; opacity:0.8;">(Remise à zéro des stats)</span>
+                                <i class="fas fa-trash-alt" style="margin-bottom:10px;"></i> SUPPRIMER TOUS LES RAPPORTS
                             </button>
                         </div>
                     </div>
