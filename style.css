@@ -39,29 +39,78 @@ input, textarea, .modal-text-body { user-select: text; font-family: 'Inter', san
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* =========================================
-   2. LOGIN SCREEN (LOGO PLUS GRAND)
+   2. LOGIN SCREEN (VERSION AÉRÉE)
    ========================================= */
 #login-screen { 
-    position: fixed; inset: 0; z-index: 9999; 
+    position: fixed; 
+    inset: 0; 
+    z-index: 9999; 
     background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); 
-    display: flex; justify-content: center; align-items: center; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
 }
+
 .login-card { 
-    background: white; padding: 50px; width: 420px; border-radius: 20px; 
-    text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); 
+    background: white; 
+    /* Augmentation du padding interne de 50px à 60px pour plus d'espace autour du contenu */
+    padding: 60px; 
+    /* Augmentation légère de la largeur pour compenser le padding et aérer horizontalement */
+    width: 450px; 
+    border-radius: 24px; /* Coins un peu plus arrondis pour la modernité */
+    text-align: center; 
+    box-shadow: 0 30px 60px -15px rgba(0,0,0,0.35); /* Ombre un peu plus marquée et douce */
     animation: popIn 0.6s var(--ease); 
 }
-/* MODIFICATION TAILLE LOGO LOGIN ICI */
-.login-logo img { width: 150px; margin-bottom: 25px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1)); }
+
+/* MODIFICATION TAILLE & MARGE LOGO LOGIN */
+.login-logo img { 
+    width: 150px; 
+    /* Augmentation de la marge sous le logo de 25px à 35px */
+    margin-bottom: 35px; 
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.15)); /* Ombre portée sous le logo plus douce */
+}
+
+.login-card h1 {
+    /* Augmentation de la marge sous le titre de 10px à 15px */
+    margin-bottom: 15px;
+    font-size: 28px; /* Titre légèrement plus grand */
+}
+
+.login-card p {
+    /* Augmentation de la marge sous le sous-titre de 30px à 40px */
+    margin-bottom: 40px;
+    font-size: 16px; /* Sous-titre légèrement plus grand */
+}
 
 .btn-discord { 
-    width: 100%; background: #5865F2; color: white; padding: 15px; 
-    border: none; border-radius: 10px; font-weight: 700; font-size: 15px; 
-    cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; 
-    transition: 0.2s; 
+    width: 100%; 
+    background: #5865F2; 
+    color: white; 
+    /* Augmentation du padding vertical du bouton de 15px à 18px pour le rendre plus imposant */
+    padding: 18px 20px; 
+    border: none; 
+    border-radius: 12px; 
+    font-weight: 700; 
+    font-size: 16px; /* Texte du bouton légèrement plus grand */
+    cursor: pointer; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 12px; 
+    transition: all 0.2s var(--ease);
 }
-.btn-discord:hover { background: #4752c4; transform: translateY(-2px); }
 
+.btn-discord:hover { 
+    background: #4752c4; 
+    transform: translateY(-3px); 
+    box-shadow: 0 10px 20px -5px rgba(88, 101, 242, 0.4); /* Ajout d'une ombre au survol */
+}
+
+.btn-discord:active {
+    transform: translateY(-1px); /* Effet de clic */
+    box-shadow: 0 5px 10px -5px rgba(88, 101, 242, 0.4);
+}
 /* =========================================
    3. LAYOUT DASHBOARD
    ========================================= */
@@ -314,3 +363,4 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
