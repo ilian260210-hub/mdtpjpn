@@ -127,46 +127,81 @@ function lancerInterface() {
 }
 
 // --- GESTION DES RAPPORTS (CORRIGÉE) ---
-function traiterRapport() {
-    // SÉCURITÉ : OBLIGATION D'ÊTRE EN SERVICE
-    if (!enService) {
-        showToast("Vous devez être en service pour effectuer cette action.", "error");
-        return;
-    }
+// ... (LE DÉBUT AVEC LES CONFIGS RESTE LE MÊME) ...
 
+// --- FONCTION DE DEBUG POUR LES RAPPORTS ---
+function traiterRapport() {
+    console.log("Tentative d'envoi du rapport...");
+
+    // 1. Récupération des valeurs
     const t = document.getElementById("pv-titre").value;
     const ty = document.getElementById("pv-type").value;
     const c = document.getElementById("pv-content").value;
     
-    if(!t || !c) { showToast("Veuillez remplir tous les champs.", "error"); return; }
-    
-    const data = { 
-        titre:t, type:ty, content:c, 
-        officer:currentUser.name, officerId:currentUser.id, date:new Date() 
+    // 2. Vérification champs vides
+    if(!t || !c) { 
+        showToast("Erreur : Titre ou contenu vide !", "error"); 
+        return; 
+    }
+
+    // 3. Vérification de l'utilisateur (Sécurité)
+    if(!currentUser || !currentUser.id) {
+        showToast("Erreur : Utilisateur non connecté.", "error");
+        return;
+    }
+
+    // 4. Préparation des données
+    const reportData = {
+        titre: t, 
+        type: ty, 
+        content: c,
+        officer: currentUser.name, 
+        officerId: currentUser.id, 
+        date: new Date()
     };
 
+    console.log("Données prêtes :", reportData);
+
+    // 5. Envoi vers Firebase
+    // Si c'est une modification
     if(currentReportId) {
-        // Mode Modification
-        db.collection("reports").doc(currentReportId).update(data).then(() => {
-            showToast("Rapport modifié avec succès.", "success");
+        db.collection("reports").doc(currentReportId).update(reportData)
+        .then(() => {
+            showToast("Rapport modifié avec succès !", "success");
             annulerEdition();
+        })
+        .catch((error) => {
+            console.error("Erreur modif : ", error);
+            showToast("Erreur lors de la modification.", "error");
         });
-    } else {
-        // Mode Création
-        db.collection("reports").add(data).then(() => {
-            let col = 3447003; 
-            if(ty==="ARRESTATION") col=15548997; 
-            if(ty==="PLAINTE") col=9662683;
-            if(ty==="AMENDE") col=2140013; // Vert
+    } 
+    // Si c'est une création (Nouveau rapport)
+    else {
+        db.collection("reports").add(reportData)
+        .then(() => {
+            console.log("Rapport envoyé à la DB !");
+            
+            // Webhook Discord
+            let col = 3447003; // Bleu par défaut
+            if(ty === "ARRESTATION") col = 15548997; // Rouge
+            if(ty === "AMENDE") col = 2140013; // Vert
             
             envoyerWebhook(WEBHOOK_PV, `📄 ${ty}`, col, `**Officier:** ${currentUser.name}\n**Titre:** ${t}\n\n${c}`);
-            showToast("Rapport transmis avec succès.", "success");
-            document.getElementById("pv-titre").value=""; 
-            document.getElementById("pv-content").value="";
+            
+            showToast("Rapport transmis avec succès !", "success");
+            
+            // Vider le formulaire
+            document.getElementById("pv-titre").value = ""; 
+            document.getElementById("pv-content").value = "";
+        })
+        .catch((error) => {
+            console.error("Erreur envoi : ", error);
+            showToast("Erreur technique : " + error.message, "error");
         });
     }
 }
 
+// ... (LE RESTE DU FICHIER RESTE IDENTIQUE) ...
 // --- ADMIN : MODIFIER / SUPPRIMER ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
@@ -327,3 +362,4 @@ function logout() {
     if(loader && txt) { txt.innerText = "Déconnexion en cours..."; loader.classList.remove("hidden"); loader.style.opacity = "1"; }
     setTimeout(() => { localStorage.removeItem("mdt_final_v7"); window.location.href = REDIRECT_URI; }, 2000);
 }
+
