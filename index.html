@@ -21,7 +21,7 @@
             <div class="logo-shimmer-container">
                 <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/5/52/Logo_DCPJ.svg/1195px-Logo_DCPJ.svg.png" alt="Logo" class="loader-logo">
             </div>
-            <p>Connexion sécurisée aux serveurs...</p>
+            <p id="loader-text">Connexion sécurisée aux serveurs...</p>
         </div>
     </div>
 
@@ -29,7 +29,11 @@
         <div class="modal-box">
             <div class="modal-header">
                 <span id="modal-type" class="badge-modal">DOSSIER</span>
-                <button onclick="fermerModal()" class="btn-close"><i class="fas fa-times"></i></button>
+                <div class="modal-actions">
+                    <button id="btn-edit-report" class="btn-icon hidden" title="Modifier"><i class="fas fa-edit"></i></button>
+                    <button id="btn-delete-report" class="btn-icon delete hidden" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                    <button onclick="fermerModal()" class="btn-close"><i class="fas fa-times"></i></button>
+                </div>
             </div>
             <div class="modal-content-scroll">
                 <h2 id="modal-title">Titre</h2>
@@ -87,20 +91,20 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.0 • Final</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 7.1 • Ultimate</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
             <div id="page-accueil" class="page active">
                 <div class="stats-row">
-                    <div class="stat-card"><div class="icon-box blue"><i class="fas fa-file-alt"></i></div><div class="stat-info"><h3>Rapports</h3><span id="stat-total">0</span></div></div>
-                    <div class="stat-card orange"><div class="icon-box orange"><i class="fas fa-shield-alt"></i></div><div class="stat-info"><h3>PVI</h3><span id="stat-pvi">0</span></div></div>
-                    <div class="stat-card purple"><div class="icon-box purple"><i class="fas fa-gavel"></i></div><div class="stat-info"><h3>Plaintes</h3><span id="stat-plainte">0</span></div></div>
-                    <div class="stat-card green"><div class="icon-box green"><i class="fas fa-ticket-alt"></i></div><div class="stat-info"><h3>Contraventions</h3><span id="stat-amende">0</span></div></div>
+                    <div class="stat-card blue"><div class="icon-box"><i class="fas fa-file-alt"></i></div><div class="stat-info"><h3>Rapports</h3><span id="stat-total">0</span></div></div>
+                    <div class="stat-card orange"><div class="icon-box"><i class="fas fa-shield-alt"></i></div><div class="stat-info"><h3>PVI</h3><span id="stat-pvi">0</span></div></div>
+                    <div class="stat-card purple"><div class="icon-box"><i class="fas fa-gavel"></i></div><div class="stat-info"><h3>Plaintes</h3><span id="stat-plainte">0</span></div></div>
+                    <div class="stat-card green"><div class="icon-box"><i class="fas fa-ticket-alt"></i></div><div class="stat-info"><h3>Contraventions</h3><span id="stat-amende">0</span></div></div>
                 </div>
                 <div class="panel">
                     <div class="panel-head"><h3><i class="fas fa-history"></i> Fil d'activité</h3></div>
-                    <div id="live-reports-list" class="list-scrollable"><div class="loader">Chargement...</div></div>
+                    <div id="live-reports-list" class="list-scrollable"><div class="loader-spinner"></div></div>
                 </div>
             </div>
 
@@ -130,15 +134,14 @@
 
             <div id="page-rapports" class="page">
                 <div class="panel">
-                    <div class="panel-head"><h3><i class="fas fa-pen-nib"></i> Nouveau Dossier</h3></div>
+                    <div class="panel-head"><h3 id="form-title"><i class="fas fa-pen-nib"></i> Nouveau Dossier</h3></div>
                     <div class="form-content">
-                        <div class="input-group">
+                        <input type="hidden" id="pv-id"> <div class="input-group">
                             <label>Titre</label><input type="text" id="pv-titre" placeholder="Ex: Braquage bijouterie">
                         </div>
                         <div class="input-group">
                             <label>Catégorie</label>
                             <select id="pv-type">
-                                <option value="INFO">Information</option>
                                 <option value="ARRESTATION">Arrestation</option>
                                 <option value="AMENDE">Contravention / Amende</option>
                                 <option value="PVI">PVI</option>
@@ -148,7 +151,8 @@
                         <div class="input-group full">
                             <label>Détails</label><textarea id="pv-content" rows="12" placeholder="Saisissez les détails..."></textarea>
                         </div>
-                        <button class="btn-submit" onclick="envoyerRapport()">Transmettre</button>
+                        <button id="btn-submit-report" class="btn-submit" onclick="traiterRapport()">Transmettre</button>
+                        <button id="btn-cancel-edit" class="btn-outline hidden" onclick="annulerEdition()" style="width:100%; margin-top:10px;">Annuler</button>
                     </div>
                 </div>
             </div>
@@ -175,19 +179,19 @@
                         <div class="icon-bg"><i class="fas fa-dna"></i></div>
                         <h3>PTS</h3>
                         <p>Police Technique & Scientifique</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
                     </div>
                     <div class="card-item">
                         <div class="icon-bg"><i class="fas fa-mask"></i></div>
                         <h3>BRI</h3>
-                        <p>Brigade de Recherche et Intervention</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
+                        <p>Brigade de Recherche et d'Intervention</p>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
                     </div>
                     <div class="card-item">
                         <div class="icon-bg"><i class="fas fa-cannabis"></i></div>
                         <h3>STUPS</h3>
                         <p>Brigade des Stupéfiants</p>
-                        <a href="https://google.com" target="_blank" class="btn-outline">Accéder au dossier</a>
+                        <a href="https://google.com" target="_blank" class="btn-outline">Voir les dossiers</a>
                     </div>
                 </div>
             </div>
@@ -214,7 +218,7 @@
                     <div class="panel-head"><h3><i class="fas fa-users"></i> État des Effectifs</h3></div>
                     <div class="table-container">
                         <table class="modern-table">
-                            <thead><tr><th>Agent</th><th>Dernière activité</th><th>Statut Actuel</th></tr></thead>
+                            <thead><tr><th style="text-align:left;">Agent</th><th>Dernière activité</th><th>Statut Actuel</th></tr></thead>
                             <tbody id="effectif-list"></tbody>
                         </table>
                     </div>
@@ -240,4 +244,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
