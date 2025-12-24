@@ -63,6 +63,10 @@
                 <li onclick="changerPage('messagerie')" id="nav-messagerie"><i class="fas fa-comment-alt"></i> Messagerie</li>
                 <li onclick="changerPage('concours')" id="nav-concours"><i class="fas fa-graduation-cap"></i> Concours</li>
                 <li onclick="changerPage('personnel')" id="nav-personnel"><i class="fas fa-users"></i> Effectifs</li>
+                
+                <li onclick="changerPage('admin')" id="nav-admin" class="hidden admin-link">
+                    <i class="fas fa-shield-alt"></i> Administration
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
@@ -71,7 +75,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 6.0 • Stable</span></div>
+                <div class="breadcrumb"><h2>Terminal Central</h2><span>Version 6.1 • Stable</span></div>
                 <div class="network-status"><span class="dot-pulse"></span> Réseau Actif</div>
             </header>
 
@@ -90,24 +94,23 @@
 
             <div id="page-service" class="page">
                 <div class="service-center-wrapper">
-                    <div class="service-header-text">
-                        <h2>Gestion de Service</h2>
-                        <p>Sélectionnez une action pour mettre à jour votre statut.</p>
-                        <div class="current-status-pill">
-                            ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span>
+                    <div class="service-box">
+                        <div class="service-header-text">
+                            <h2>Gestion de Service</h2>
+                            <p>Sélectionnez une action pour mettre à jour votre statut.</p>
+                            <div class="current-status-pill">ACTUELLEMENT : <span id="txt-status-big">HORS SERVICE</span></div>
                         </div>
-                    </div>
-                    
-                    <div class="service-actions-cards">
-                        <div class="action-card start-card" onclick="toggleServiceButton('prise')">
-                            <div class="icon-circle"><i class="fas fa-play"></i></div>
-                            <h3>Prise de Service</h3>
-                            <p>Commencer ma patrouille</p>
-                        </div>
-                        <div class="action-card end-card" onclick="toggleServiceButton('fin')">
-                            <div class="icon-circle"><i class="fas fa-stop"></i></div>
-                            <h3>Fin de Service</h3>
-                            <p>Terminer et rentrer</p>
+                        <div class="service-actions-cards">
+                            <div class="action-card start-card" onclick="toggleServiceButton('prise')">
+                                <div class="icon-circle"><i class="fas fa-play"></i></div>
+                                <h3>Prise de Service</h3>
+                                <p>Commencer ma patrouille</p>
+                            </div>
+                            <div class="action-card end-card" onclick="toggleServiceButton('fin')">
+                                <div class="icon-circle"><i class="fas fa-stop"></i></div>
+                                <h3>Fin de Service</h3>
+                                <p>Terminer et rentrer</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,22 +176,33 @@
 
             <div id="page-personnel" class="page">
                 <div class="panel">
-                    <div class="panel-head"><h3><i class="fas fa-users"></i> État des Effectifs</h3></div>
+                    <div class="panel-head"><h3><i class="fas fa-users"></i> Tableau des Effectifs</h3></div>
                     <div class="table-container">
                         <table class="modern-table">
-                            <thead>
-                                <tr>
-                                    <th>Agent</th>
-                                    <th>Dernière activité</th>
-                                    <th>Statut Actuel</th>
-                                </tr>
-                            </thead>
-                            <tbody id="effectif-list">
-                                </tbody>
+                            <thead><tr><th>Agent</th><th>Dernière activité</th><th>Statut Actuel</th></tr></thead>
+                            <tbody id="effectif-list"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
+            <div id="page-admin" class="page">
+                <div class="service-center-wrapper">
+                    <div class="service-box admin-danger-box">
+                        <h2 style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> Zone Administration</h2>
+                        <p>Attention, les actions ci-dessous sont irréversibles et affectent toute la base de données.</p>
+                        
+                        <div style="margin-top: 30px;">
+                            <button onclick="resetAllReports()" class="btn-big end" style="width: 100%; height: auto;">
+                                <i class="fas fa-trash-alt" style="margin-bottom:10px;"></i>
+                                SUPPRIMER TOUS LES RAPPORTS<br>
+                                <span style="font-size:12px; font-weight:400; opacity:0.8;">(Remise à zéro des stats)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
     <script src="script.js"></script>
