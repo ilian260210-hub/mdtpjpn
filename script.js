@@ -230,23 +230,38 @@ function updateUIStatus(isOn) {
     }
 }
 
+// ... (DÉBUT DU FICHIER INCHANGÉ) ...
+
+// --- RAPPORTS (STATS MISES À JOUR) ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
-        let st = {t:0, a:0, p:0, pl:0}; let html="";
+        let st = {t:0, amende:0, p:0, pl:0}; let html="";
         s.forEach(d => {
             const da = d.data(); st.t++;
-            if(da.type==="ARRESTATION") st.a++; if(da.type==="PVI") st.p++; if(da.type==="PLAINTE") st.pl++;
-            let tagC = "info"; if(da.type==="ARRESTATION") tagC="arrest";
+            // MODIFICATION ICI : On compte les AMENDES, plus les ARRESTATIONS
+            if(da.type==="AMENDE") st.amende++; 
+            if(da.type==="PVI") st.p++; 
+            if(da.type==="PLAINTE") st.pl++;
+            
+            let tagC = "info"; 
+            if(da.type==="ARRESTATION") tagC="arrest";
+            if(da.type==="AMENDE") tagC="amende"; // Couleur verte pour amende
+            
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
                         <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
                         <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
                      </div>`;
         });
-        document.getElementById("stat-total").innerText = st.t; document.getElementById("stat-arrest").innerText = st.a;
-        document.getElementById("stat-pvi").innerText = st.p; document.getElementById("stat-plainte").innerText = st.pl;
+        document.getElementById("stat-total").innerText = st.t;
+        // MODIFICATION ICI : Affiche amende
+        document.getElementById("stat-amende").innerText = st.amende;
+        document.getElementById("stat-pvi").innerText = st.p; 
+        document.getElementById("stat-plainte").innerText = st.pl;
         document.getElementById("live-reports-list").innerHTML = html;
     });
 }
+
+// ... (LE RESTE DU FICHIER NE CHANGE PAS) ...
 
 function ecouterEffectifs() {
     db.collection("users").onSnapshot((s) => {
@@ -299,5 +314,6 @@ function changerPage(id) {
     document.getElementById('nav-'+id).classList.add('active');
 }
 function logout() { localStorage.removeItem("mdt_final_v6"); window.location.href=REDIRECT_URI; }
+
 
 
