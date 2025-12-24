@@ -39,7 +39,7 @@ let enService = false;
 let isAdmin = false;
 
 window.onload = () => {
-    const localUser = localStorage.getItem("mdt_final_v6");
+    const localUser = localStorage.getItem("mdt_final_premium");
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = fragment.get("access_token");
 
@@ -73,10 +73,7 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
     container.appendChild(toast);
 
-    // Supprimer après 4 secondes
-    setTimeout(() => {
-        toast.remove();
-    }, 4000);
+    setTimeout(() => { toast.remove(); }, 4000);
 }
 
 function loginWithDiscord() {
@@ -102,7 +99,7 @@ async function verifierUtilisateurDiscord(token) {
                 avatar: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
                 isAdmin: isAdmin
             };
-            localStorage.setItem("mdt_final_v6", JSON.stringify(currentUser));
+            localStorage.setItem("mdt_final_premium", JSON.stringify(currentUser));
             
             db.collection("users").doc(currentUser.id).set({
                 name: currentUser.name, avatar: currentUser.avatar, lastLogin: new Date()
@@ -115,36 +112,41 @@ async function verifierUtilisateurDiscord(token) {
     } catch (e) { console.error(e); }
 }
 
-// ... (Le début du fichier avec tes configs ne change pas) ...
-
 function lancerInterface() {
-    // Afficher le loader
+    // 1. Afficher le loader
     const loader = document.getElementById("loading-overlay");
-    loader.classList.remove("hidden");
+    if(loader) loader.classList.remove("hidden");
 
+    // 2. Préparer l'interface
     document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("user-name").innerText = currentUser.name;
-    document.getElementById("user-avatar").src = currentUser.avatar;
+    if(currentUser) {
+        document.getElementById("user-name").innerText = currentUser.name;
+        document.getElementById("user-avatar").src = currentUser.avatar;
+    }
     window.history.replaceState({}, document.title, "/");
-
     if(isAdmin) document.getElementById("nav-admin").classList.remove("hidden");
 
-    ecouterRapports();
-    ecouterEffectifs();
-    ecouterMails();
-    verifierMonStatut();
+    // 3. Lancer les écoutes (Firebase)
+    try {
+        ecouterRapports();
+        ecouterEffectifs();
+        ecouterMails();
+        verifierMonStatut();
+    } catch(e) { console.error("Erreur init Firebase", e); }
 
-    // MODIFICATION ICI : Chargement plus long (3 secondes d'attente + 1s de fondu = 4s total)
+    // 4. Timer pour cacher le loader (4 secondes)
     setTimeout(() => {
-        loader.style.opacity = "0"; // Commence à disparaître lentement
-        setTimeout(() => {
-            loader.classList.add("hidden"); // Se cache complètement
-            document.getElementById("dashboard-screen").classList.remove("hidden");
-        }, 1000); // Attend 1 seconde que le fondu soit fini
-    }, 3000); // Attend 3 secondes avant de commencer le fondu
+        if(loader) {
+            loader.style.opacity = "0";
+            setTimeout(() => {
+                loader.classList.add("hidden");
+                document.getElementById("dashboard-screen").classList.remove("hidden");
+            }, 800);
+        }
+    }, 3000);
 }
 
-// ... (Le reste du fichier ne change pas) ...
+// --- LOGIQUE ADMIN RESET ---
 async function resetAllReports() {
     if(!confirm("⚠️ ATTENTION : Suppression totale des rapports ?")) return;
 
@@ -163,6 +165,7 @@ async function resetAllReports() {
     }
 }
 
+// --- MESSAGERIE ---
 function ecouterMails() {
     db.collection("mails").orderBy("date", "asc").limitToLast(50).onSnapshot((s) => {
         const box = document.getElementById("chat-box"); box.innerHTML = "";
@@ -173,10 +176,7 @@ function ecouterMails() {
             box.innerHTML += `
                 <div class="${rowClass}">
                     ${!isMe ? `<img src="${m.authorAvatar}" class="msg-avatar">` : ''}
-                    <div class="msg-bubble">
-                        ${!isMe ? `<span class="msg-name">${m.authorName}</span>` : ''}
-                        ${m.content}
-                    </div>
+                    <div class="msg-bubble">${m.content}</div>
                 </div>
             `;
         });
@@ -194,6 +194,7 @@ function envoyerMail() {
     input.value = "";
 }
 
+// --- SERVICE ---
 function verifierMonStatut() {
     db.collection("users").doc(currentUser.id).get().then((doc) => {
         if (doc.exists && doc.data().enService) {
@@ -230,30 +231,26 @@ function updateUIStatus(isOn) {
     }
 }
 
-// ... (DÉBUT DU FICHIER INCHANGÉ) ...
-
-// --- RAPPORTS (STATS MISES À JOUR) ---
+// --- RAPPORTS STATS (MODIFIÉ POUR AMENDE) ---
 function ecouterRapports() {
     db.collection("reports").orderBy("date", "desc").limit(30).onSnapshot((s) => {
         let st = {t:0, amende:0, p:0, pl:0}; let html="";
         s.forEach(d => {
             const da = d.data(); st.t++;
-            // MODIFICATION ICI : On compte les AMENDES, plus les ARRESTATIONS
             if(da.type==="AMENDE") st.amende++; 
             if(da.type==="PVI") st.p++; 
             if(da.type==="PLAINTE") st.pl++;
             
             let tagC = "info"; 
             if(da.type==="ARRESTATION") tagC="arrest";
-            if(da.type==="AMENDE") tagC="amende"; // Couleur verte pour amende
+            if(da.type==="AMENDE") tagC="amende";
             
             html += `<div class="list-item" onclick="ouvrirModal('${d.id}')">
                         <div><span class="tag ${tagC}">${da.type}</span> <b>${da.titre}</b></div>
                         <div style="font-size:12px;color:#999">${new Date(da.date.toDate()).toLocaleDateString()}</div>
                      </div>`;
         });
-        document.getElementById("stat-total").innerText = st.t;
-        // MODIFICATION ICI : Affiche amende
+        document.getElementById("stat-total").innerText = st.t; 
         document.getElementById("stat-amende").innerText = st.amende;
         document.getElementById("stat-pvi").innerText = st.p; 
         document.getElementById("stat-plainte").innerText = st.pl;
@@ -261,8 +258,7 @@ function ecouterRapports() {
     });
 }
 
-// ... (LE RESTE DU FICHIER NE CHANGE PAS) ...
-
+// --- EFFECTIFS ---
 function ecouterEffectifs() {
     db.collection("users").onSnapshot((s) => {
         let h = "";
@@ -277,6 +273,7 @@ function ecouterEffectifs() {
     });
 }
 
+// --- MODAL & ENVOI ---
 async function ouvrirModal(id) {
     const d = await db.collection("reports").doc(id).get();
     if(!d.exists) return;
@@ -313,7 +310,6 @@ function changerPage(id) {
     document.getElementById('page-'+id).classList.add('active');
     document.getElementById('nav-'+id).classList.add('active');
 }
-function logout() { localStorage.removeItem("mdt_final_v6"); window.location.href=REDIRECT_URI; }
-
+function logout() { localStorage.removeItem("mdt_final_premium"); window.location.href=REDIRECT_URI; }
 
 
